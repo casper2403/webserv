@@ -4,6 +4,21 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
+struct LocationConfig {
+    std::string path;
+    std::string root;
+    std::string index;
+    bool autoindex;
+    std::vector<std::string> methods; // GET, POST, DELETE
+    std::string return_path; // For redirections
+    // Add upload paths, cgi extensions etc. later
+
+    LocationConfig() : autoindex(false) {}
+};
 
 struct ServerConfig {
     int port;
@@ -11,13 +26,19 @@ struct ServerConfig {
     std::string root;
     std::vector<std::string> server_names;
     std::map<int, std::string> error_pages;
-    // Add routes/locations here later
+    unsigned long client_max_body_size;
+    std::vector<LocationConfig> locations;
+
+    ServerConfig() : port(80), host("0.0.0.0"), root("./"), client_max_body_size(1024 * 1024) {}
 };
 
 class ConfigParser {
 public:
-    // Returns a vector because one file can contain multiple "server { }" blocks
     std::vector<ServerConfig> parse(const std::string& filename);
+
+private:
+    void parseServerBlock(std::stringstream& ss, ServerConfig& config);
+    void parseLocationBlock(std::stringstream& ss, LocationConfig& location);
 };
 
 #endif
