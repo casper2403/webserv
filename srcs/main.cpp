@@ -1,17 +1,22 @@
 #include "../includes/Webserver.hpp"
-#include <iostream>
+#include "../includes/Config.hpp" // Include your new parser
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        // "Your program must use a configuration file provided as an argument" [cite: 112]
         std::cerr << "Usage: ./webserv [config_file]" << std::endl;
         return 1;
     }
 
     try {
+        // 1. Parse the config file first
+        ConfigParser parser;
+        std::vector<ServerConfig> configs = parser.parse(argv[1]);
+
+        // 2. Pass the configurations to the server
         Webserver server;
-        server.init(argv[1]);
+        server.init(configs); 
         server.run();
+
     } catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;
         return 1;
