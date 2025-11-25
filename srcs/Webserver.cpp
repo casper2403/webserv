@@ -1,15 +1,35 @@
 #include "../includes/Webserver.hpp"
+#include "../includes/Config.hpp" // Include your new parser
 
 Webserver::Webserver() {}
 Webserver::~Webserver() {}
 
-void Webserver::init(const char *config_path)
+// Change signature to accept vector of configs
+// srcs/Webserver.cpp
+
+void Webserver::init(const std::vector<ServerConfig>& configs)
 {
-	(void)config_path;
-	// TODO: Write your Config Parser here later.
-	// For now, we hardcode listening on port 8080.
-	initSocket(8080);
-	std::cout << "Server initialized on port 8080" << std::endl;
+    std::vector<int> listening_ports;
+
+    for (size_t i = 0; i < configs.size(); ++i) {
+        int port = configs[i].port;
+
+        // Check if we are already listening on this port
+        bool port_exists = false;
+        for (size_t j = 0; j < listening_ports.size(); ++j) {
+            if (listening_ports[j] == port) {
+                port_exists = true;
+                break;
+            }
+        }
+
+        // If not, open the socket and add it to our list
+        if (!port_exists) {
+            initSocket(port);
+            listening_ports.push_back(port);
+            std::cout << "Server initialized on port " << port << std::endl;
+        }
+    }
 }
 
 // Setup the listening socket
@@ -31,7 +51,6 @@ void Webserver::initSocket(int port)
 	}
 
 	// Set socket to NON-BLOCKING mode (Critical for 42 Project)
-	// [cite: 114, 145]
 	if (fcntl(server_fd, F_SETFL, O_NONBLOCK) < 0)
 	{
 		perror("fcntl");
@@ -66,45 +85,90 @@ void Webserver::initSocket(int port)
 
 void Webserver::run()
 {
-	std::cout << "Waiting for connections..." << std::endl;
+    std::cout << "Waiting for connections..." << std::endl;
 
-	while (true)
-	{
-		// Call poll() - this blocks until an event happens
-		//
-		int ret = poll(&_fds[0], _fds.size(), -1);
+    while (true)
+    {
+        int ret = poll(&_fds[0], _fds.size(), -1);
 
-		if (ret < 0)
-		{
-			perror("poll");
-			break;
-		}
+        // FIX: Check the return value to resolve the "unused variable" error
+        if (ret < 0)
+        {
+            perror("poll");
+            break; 
+        }
 
-		// Iterate over FDs to check for events
-		// CAUTION: We use a standard loop index because modifying _fds
-		// inside the loop (e.g. removing a client) invalidates iterators.
-		for (size_t i = 0; i < _fds.size(); ++i)
-		{
+        // Iterate over FDs to check for events
+        for (size_t i = 0; i < _fds.size(); ++i)
+        {
+            // 1. HANDLE READ (Recv)
+            if (_fds[i].revents & POLLIN)
+            {
+                if (_fds[i].fd == _fds[0].fd) // Assuming 0 is the listener
+                {
+                    acceptConnection(_fds[i].fd);
+                }
+                else
+                {
+                    handleClientRead(_fds[i].fd);
+                }
+            }
 
-			// Check if we have data to read
-			if (_fds[i].revents & POLLIN)
-			{
+            // 2. HANDLE WRITE (Send)
+            if (_fds[i].revents & POLLOUT)
+            {
+                handleClientWrite(_fds[i].fd);
+            }
+        }
+    }
+}
 
-				// If the FD is our listening socket, it's a NEW connection
-				// (For simplicity, assuming index 0 is listener.
-				// In real project, check against list of listener FDs).
-				if (_fds[i].fd == _fds[0].fd)
-				{
-					acceptConnection(_fds[i].fd);
-				}
-				else
-				{
-					// It's an existing client sending data
-					handleClientData(_fds[i].fd);
-				}
-			}
-		}
-	}
+// ONLY READS. Never calls send().
+void Webserver::handleClientRead(int client_fd)
+{
+    char buffer[1024];
+    int bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+
+    if (bytes_read <= 0) {
+        // Handle disconnect...
+    } else {
+        buffer[bytes_read] = '\0';
+        _clients[client_fd].request_buffer += buffer;
+
+        // CHECK: Is the request complete? (e.g., look for \r\n\r\n)
+        if (_clients[client_fd].request_buffer.find("\r\n\r\n") != std::string::npos) {
+            // Process request and prepare response
+            // Store it in the buffer, DO NOT SEND yet.
+            _clients[client_fd].response_buffer = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello World!\n";
+            _clients[client_fd].is_ready_to_write = true;
+        }
+    }
+}
+
+// ONLY WRITES. Never calls recv().
+void Webserver::handleClientWrite(int client_fd)
+{
+    // Check if we actually have something to send
+    if (_clients[client_fd].is_ready_to_write && !_clients[client_fd].response_buffer.empty()) {
+        
+        std::string &response = _clients[client_fd].response_buffer;
+        
+        // Send as much as the OS allows
+        int bytes_sent = send(client_fd, response.c_str(), response.size(), 0);
+        
+        if (bytes_sent < 0) {
+             // Handle error
+        } else {
+            // Remove sent bytes from buffer
+            response.erase(0, bytes_sent);
+            
+            // If buffer is empty, we are done sending
+            if (response.empty()) {
+                _clients[client_fd].is_ready_to_write = false;
+                // If not keep-alive, close connection here
+            }
+        }
+    }
 }
 
 void Webserver::acceptConnection(int server_fd)
