@@ -1,5 +1,6 @@
 #include "../includes/Webserver.hpp"
 #include "../includes/Config.hpp" // Include your new parser
+#include "../includes/HttpResponse.hpp"
 
 Webserver::Webserver() {}
 Webserver::~Webserver() {}
@@ -10,6 +11,7 @@ Webserver::~Webserver() {}
 void Webserver::init(const std::vector<ServerConfig> &configs)
 {
 	std::vector<int> listening_ports;
+	_configs_ptr = &configs; // Store the address of the config vector
 
 	for (size_t i = 0; i < configs.size(); ++i)
 	{
@@ -26,14 +28,16 @@ void Webserver::init(const std::vector<ServerConfig> &configs)
 			}
 		}
 
+
 		// If not, open the socket and add it to our list
 		if (!port_exists)
-		{
+		{			
 			initSocket(port);
 			listening_ports.push_back(port);
 			std::cout << "Server initialized on port " << port << std::endl;
 		}
 	}
+
 }
 
 // Setup the listening socket
@@ -76,6 +80,7 @@ void Webserver::initSocket(int port)
 	if (listen(server_fd, 10) < 0)
 	{
 		perror("listen");
+		close(server_fd);
 		exit(EXIT_FAILURE);
 	}
 
@@ -86,6 +91,7 @@ void Webserver::initSocket(int port)
 	pfd.revents = 0;
 	_fds.push_back(pfd);
 	_server_fds.push_back(server_fd);
+	_server_fd_to_port[server_fd] = port;
 }
 
 void Webserver::run()
@@ -144,7 +150,6 @@ void Webserver::handleClientRead(int client_fd)
     int bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
 
     if (bytes_read <= 0) {
-        // Handle disconnect/error
         close(client_fd);
         _clients.erase(client_fd);
         // Remove from _fds loop... (implement the removal logic properly as before)
@@ -156,19 +161,25 @@ void Webserver::handleClientRead(int client_fd)
 
         if (finished) {
             std::cout << "Request Parsed!" << std::endl;
-            std::cout << "Method: " << _clients[client_fd].request.getMethod() << std::endl;
-            std::cout << "Path: " << _clients[client_fd].request.getPath() << std::endl;
+            // std::cout << "Method: " << _clients[client_fd].request.getMethod() << std::endl;
+            // std::cout << "Path: " << _clients[client_fd].request.getPath() << std::endl;
 
-            // Prepare response (Temporary)
-            std::string body = "<html><body><h1>Parsed Successfully!</h1></body></html>";
-            std::stringstream ss;
-            ss << "HTTP/1.1 200 OK\r\n"
-               << "Content-Type: text/html\r\n"
-               << "Content-Length: " << body.size() << "\r\n"
-               << "\r\n"
-               << body;
+            // // Prepare response (Temporary)
+            // std::string body = "<html><body><h1>Parsed Successfully!</h1></body></html>";
+            // std::stringstream ss;
+            // ss << "HTTP/1.1 200 OK\r\n"
+            //    << "Content-Type: text/html\r\n"
+            //    << "Content-Length: " << body.size() << "\r\n"
+            //    << "\r\n"
+            //    << body;
+			std::string response = HttpResponse::generateResponse(
+                _clients[client_fd].request, 
+                *_configs_ptr, 
+                _clients[client_fd].listening_port
+            );
             
-            _clients[client_fd].response_buffer = ss.str();
+            //_clients[client_fd].response_buffer = ss.str();
+			_clients[client_fd].response_buffer = response;
             _clients[client_fd].is_ready_to_write = true;
             
             // Reset parser for next request on same connection (Keep-Alive)
@@ -196,13 +207,16 @@ void Webserver::handleClientWrite(int client_fd)
 		else
 		{
 			// Remove sent bytes from buffer
-			response.erase(0, bytes_sent);
+			if (bytes_sent > 0)
+				response.erase(0, bytes_sent);
 
 			// If buffer is empty, we are done sending
 			if (response.empty())
 			{
 				_clients[client_fd].is_ready_to_write = false;
+				std::cout << "Response fully sent to client " << client_fd << ". Closing connection." << std::endl;
 				// If not keep-alive, close connection here
+				// Still needs cleanup
 			}
 		}
 	}
@@ -238,6 +252,8 @@ void Webserver::acceptConnection(int server_fd)
 	// Add to map
 	Client new_client;
 	new_client.fd = client_fd;
+	new_client.listening_port = _server_fd_to_port[server_fd]; // You must map the server_fd to its port and store it in the client struct
+	 new_client.is_ready_to_write = false;
 	_clients[client_fd] = new_client;
 
 	std::cout << "New connection: " << client_fd << std::endl;

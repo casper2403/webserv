@@ -22,6 +22,7 @@ struct Client
     HttpRequest request;         // <--- Replace std::string request_buffer
     std::string response_buffer;
     bool is_ready_to_write;
+    int listening_port;
 };
 
 class Webserver
@@ -37,12 +38,16 @@ private:
 	void handleClientRead(int client_fd);
 	void handleClientWrite(int client_fd);
 
+	int getServerPort(int server_fd); // New helper to get port from server fd
+	std::map<int, int> _server_fd_to_port; // Maps listening FD -> Port
+    const std::vector<ServerConfig>* _configs_ptr; // Stores pointer to config vector
+
 public:
 	Webserver();
 	~Webserver();
 
 	// Parse config and setup sockets
-void init(const std::vector<ServerConfig>& configs);
+	void init(const std::vector<ServerConfig>& configs);
 	// The main loop
 	void run();
 };
