@@ -19,7 +19,7 @@
 struct Client
 {
     int fd;
-    HttpRequest request;         // <--- Replace std::string request_buffer
+    HttpRequest request;
     std::string response_buffer;
     bool is_ready_to_write;
     int listening_port;
@@ -29,7 +29,7 @@ class Webserver
 {
 private:
     std::vector<struct pollfd> _fds;
-    std::vector<int> _server_fds; // <--- ADD THIS to track listeners
+    std::vector<int> _server_fds;
     std::map<int, Client> _clients;
 
 	void initSocket(int port);
