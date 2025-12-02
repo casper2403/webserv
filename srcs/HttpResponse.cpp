@@ -2,14 +2,24 @@
 
 // --- 2.2 Location Matching (Simplified for now) ---
 const LocationConfig* HttpResponse::findMatchingLocation(const ServerConfig& server, const std::string& path) {
-    // In a real implementation, you'd find the longest, most specific match.
-    // For now, we assume a single 'location /' block.
+    // Find the longest, most specific match by checking if path starts with location path
+    const LocationConfig* best_match = NULL;
+    size_t best_match_length = 0;
+    
     for (size_t i = 0; i < server.locations.size(); ++i) {
-        if (server.locations[i].path == path) {
-            return &server.locations[i];
+        const std::string& location_path = server.locations[i].path;
+        
+        // Check if the requested path starts with this location path
+        if (path.find(location_path) == 0) {
+            // This location matches, check if it's more specific than current best
+            if (location_path.length() > best_match_length) {
+                best_match = &server.locations[i];
+                best_match_length = location_path.length();
+            }
         }
     }
-    return NULL; // Should not happen with a '/' location in config
+    
+    return best_match;
 }
 
 // --- 3.1 & 3.2 Path Resolution and File Read ---
