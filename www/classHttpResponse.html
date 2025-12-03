@@ -98,28 +98,28 @@ $(function(){initNavTree('classHttpResponse.html','',''); });
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:af67c0f73409f9f1c4e4bb391116e2555" id="r_af67c0f73409f9f1c4e4bb391116e2555"><td class="memItemLeft" align="right" valign="top">static std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af67c0f73409f9f1c4e4bb391116e2555">generateResponse</a> (const <a class="el" href="classHttpRequest.html">HttpRequest</a> &amp;req, const std::vector&lt; <a class="el" href="structServerConfig.html">ServerConfig</a> &gt; &amp;configs, int client_port)</td></tr>
-<tr class="memdesc:af67c0f73409f9f1c4e4bb391116e2555"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate the HTTP response for a given request.  <br /></td></tr>
+<tr class="memdesc:af67c0f73409f9f1c4e4bb391116e2555"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generates the HTTP response for a given request.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pri-static-methods" class="groupheader"><a id="pri-static-methods" name="pri-static-methods"></a>
 Static Private Member Functions</h2></td></tr>
 <tr class="memitem:aba9109303c286606e50070145681e500" id="r_aba9109303c286606e50070145681e500"><td class="memItemLeft" align="right" valign="top">static const <a class="el" href="structServerConfig.html">ServerConfig</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aba9109303c286606e50070145681e500">findMatchingServer</a> (const <a class="el" href="classHttpRequest.html">HttpRequest</a> &amp;req, const std::vector&lt; <a class="el" href="structServerConfig.html">ServerConfig</a> &gt; &amp;configs, int client_port)</td></tr>
-<tr class="memdesc:aba9109303c286606e50070145681e500"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the best matching server block for a given request.  <br /></td></tr>
+<tr class="memdesc:aba9109303c286606e50070145681e500"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds the best matching server block for a given request.  <br /></td></tr>
 <tr class="memitem:a90543da7b6a61c191af55a3656be290b" id="r_a90543da7b6a61c191af55a3656be290b"><td class="memItemLeft" align="right" valign="top">static const <a class="el" href="structLocationConfig.html">LocationConfig</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a90543da7b6a61c191af55a3656be290b">findMatchingLocation</a> (const <a class="el" href="structServerConfig.html">ServerConfig</a> &amp;server, const std::string &amp;path)</td></tr>
-<tr class="memdesc:a90543da7b6a61c191af55a3656be290b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the best matching location block for a given request path.  <br /></td></tr>
+<tr class="memdesc:a90543da7b6a61c191af55a3656be290b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds the best matching location block for a given request path.  <br /></td></tr>
 <tr class="memitem:a2e41a4e188f0268af7469119641b9d4c" id="r_a2e41a4e188f0268af7469119641b9d4c"><td class="memItemLeft" align="right" valign="top">static std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2e41a4e188f0268af7469119641b9d4c">handleGetRequest</a> (const <a class="el" href="structLocationConfig.html">LocationConfig</a> &amp;loc_config, const std::string &amp;uri)</td></tr>
-<tr class="memdesc:a2e41a4e188f0268af7469119641b9d4c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handle GET requests by serving files.  <br /></td></tr>
+<tr class="memdesc:a2e41a4e188f0268af7469119641b9d4c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handles GET requests by serving files from the filesystem.  <br /></td></tr>
 <tr class="memitem:ab5f61c51ec39cec4e478f7deb9fa2398" id="r_ab5f61c51ec39cec4e478f7deb9fa2398"><td class="memItemLeft" align="right" valign="top">static std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab5f61c51ec39cec4e478f7deb9fa2398">handleDeleteRequest</a> (const <a class="el" href="structLocationConfig.html">LocationConfig</a> &amp;loc_config, const std::string &amp;uri)</td></tr>
-<tr class="memdesc:ab5f61c51ec39cec4e478f7deb9fa2398"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handle DELETE requests by removing files.  <br /></td></tr>
+<tr class="memdesc:ab5f61c51ec39cec4e478f7deb9fa2398"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handles DELETE requests by removing files from the filesystem.  <br /></td></tr>
 <tr class="memitem:a20a91fb611044f3e368832c70eaf1d54" id="r_a20a91fb611044f3e368832c70eaf1d54"><td class="memItemLeft" align="right" valign="top">static std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a20a91fb611044f3e368832c70eaf1d54">handlePostRequest</a> (const <a class="el" href="structLocationConfig.html">LocationConfig</a> &amp;loc_config, const <a class="el" href="classHttpRequest.html">HttpRequest</a> &amp;req)</td></tr>
-<tr class="memdesc:a20a91fb611044f3e368832c70eaf1d54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handle POST requests by saving uploaded files.  <br /></td></tr>
+<tr class="memdesc:a20a91fb611044f3e368832c70eaf1d54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handles POST requests by saving uploaded files to the server.  <br /></td></tr>
 <tr class="memitem:a5915dc6a3d23e80af95078879f09b267" id="r_a5915dc6a3d23e80af95078879f09b267"><td class="memItemLeft" align="right" valign="top">static std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5915dc6a3d23e80af95078879f09b267">buildResponseHeader</a> (int status_code, const std::string &amp;status_text, size_t content_length, const std::string &amp;content_type)</td></tr>
-<tr class="memdesc:a5915dc6a3d23e80af95078879f09b267"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build the HTTP response header.  <br /></td></tr>
+<tr class="memdesc:a5915dc6a3d23e80af95078879f09b267"><td class="mdescLeft">&#160;</td><td class="mdescRight">Builds the HTTP response header.  <br /></td></tr>
 <tr class="memitem:a2e5da669093bc07ed716e6a5f426b1d9" id="r_a2e5da669093bc07ed716e6a5f426b1d9"><td class="memItemLeft" align="right" valign="top">static std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2e5da669093bc07ed716e6a5f426b1d9">buildErrorResponse</a> (int status_code, const <a class="el" href="structServerConfig.html">ServerConfig</a> *server_config)</td></tr>
-<tr class="memdesc:a2e5da669093bc07ed716e6a5f426b1d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build a simple error response page.  <br /></td></tr>
+<tr class="memdesc:a2e5da669093bc07ed716e6a5f426b1d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Builds a simple HTTP error response page.  <br /></td></tr>
 <tr class="memitem:a418735b7e9dcd10bf8948a7b94836706" id="r_a418735b7e9dcd10bf8948a7b94836706"><td class="memItemLeft" align="right" valign="top">static std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a418735b7e9dcd10bf8948a7b94836706">getFileContent</a> (const std::string &amp;filepath)</td></tr>
-<tr class="memdesc:a418735b7e9dcd10bf8948a7b94836706"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the entire content of a file into a string.  <br /></td></tr>
+<tr class="memdesc:a418735b7e9dcd10bf8948a7b94836706"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads the entire content of a file into a string.  <br /></td></tr>
 <tr class="memitem:a735fc1423e0d420c91aed06a86327b8e" id="r_a735fc1423e0d420c91aed06a86327b8e"><td class="memItemLeft" align="right" valign="top">static std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a735fc1423e0d420c91aed06a86327b8e">getMimeType</a> (const std::string &amp;filepath)</td></tr>
-<tr class="memdesc:a735fc1423e0d420c91aed06a86327b8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the MIME type based on the file extension.  <br /></td></tr>
+<tr class="memdesc:a735fc1423e0d420c91aed06a86327b8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determines the MIME type based on the file extension.  <br /></td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a2e5da669093bc07ed716e6a5f426b1d9" name="a2e5da669093bc07ed716e6a5f426b1d9"></a>
@@ -149,15 +149,16 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Build a simple error response page. </p>
+<p>Builds a simple HTTP error response page. </p>
+<p>Generates a basic HTML error page for common HTTP error codes (404, 405, 403, 500). Optionally uses the server configuration for custom error pages (not implemented).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">status_code</td><td>The HTTP status code </td></tr>
-    <tr><td class="paramname">server_config</td><td>The server configuration (for custom error pages, if any) </td></tr>
+    <tr><td class="paramname">status_code</td><td>The HTTP status code for the error. </td></tr>
+    <tr><td class="paramname">server_config</td><td>The server configuration (unused, for future custom error pages). </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>std::string The full HTTP error response </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The full HTTP error response as a string. </dd></dl>
 
 </div>
 </div>
@@ -198,17 +199,18 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Build the HTTP response header. </p>
+<p>Builds the HTTP response header. </p>
+<p>Constructs the HTTP response header string with the given status code, status text, content length, and content type.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">status_code</td><td>The HTTP status code </td></tr>
-    <tr><td class="paramname">status_text</td><td>The HTTP status text </td></tr>
-    <tr><td class="paramname">content_length</td><td>The length of the response body </td></tr>
-    <tr><td class="paramname">content_type</td><td>The MIME type of the response body </td></tr>
+    <tr><td class="paramname">status_code</td><td>The HTTP status code (e.g., 200, 404). </td></tr>
+    <tr><td class="paramname">status_text</td><td>The HTTP status text (e.g., "OK", "Not Found"). </td></tr>
+    <tr><td class="paramname">content_length</td><td>The length of the response body in bytes. </td></tr>
+    <tr><td class="paramname">content_type</td><td>The MIME type of the response body. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>std::string The complete HTTP response header </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The complete HTTP response header as a string. </dd></dl>
 
 </div>
 </div>
@@ -239,15 +241,16 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Find the best matching location block for a given request path. </p>
+<p>Finds the best matching location block for a given request path. </p>
+<p>This function iterates through the server's location blocks and returns the one with the longest matching prefix for the given path. If no match is found, returns nullptr.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">server</td><td>The server configuration </td></tr>
-    <tr><td class="paramname">path</td><td>The request URI path </td></tr>
+    <tr><td class="paramname">server</td><td>The server configuration containing location blocks. </td></tr>
+    <tr><td class="paramname">path</td><td>The request URI path to match. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>const LocationConfig* Pointer to the matching location config, or nullptr if not found </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Pointer to the best matching <a class="el" href="structLocationConfig.html">LocationConfig</a>, or nullptr if none found. </dd></dl>
 
 </div>
 </div>
@@ -283,16 +286,17 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Find the best matching server block for a given request. </p>
+<p>Finds the best matching server block for a given request. </p>
+<p>Searches the list of server configurations for one matching the client's port. If none match, returns the first server config if available, otherwise nullptr.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">req</td><td>The HTTP request </td></tr>
-    <tr><td class="paramname">configs</td><td>The list of server configurations </td></tr>
-    <tr><td class="paramname">client_port</td><td>The port of the client </td></tr>
+    <tr><td class="paramname">req</td><td>The HTTP request. </td></tr>
+    <tr><td class="paramname">configs</td><td>The list of server configurations. </td></tr>
+    <tr><td class="paramname">client_port</td><td>The port number of the client connection. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>const ServerConfig* Pointer to the matching server config, or nullptr if not found </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Pointer to the matching <a class="el" href="structServerConfig.html">ServerConfig</a>, or nullptr if not found. </dd></dl>
 
 </div>
 </div>
@@ -328,16 +332,17 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Generate the HTTP response for a given request. </p>
+<p>Generates the HTTP response for a given request. </p>
+<p>Determines the appropriate server and location configuration, checks if the method is allowed, and dispatches to the correct handler (GET, POST, DELETE). Returns an error response if needed.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">req</td><td>The HTTP request </td></tr>
-    <tr><td class="paramname">configs</td><td>The list of server configurations </td></tr>
-    <tr><td class="paramname">client_port</td><td>The port of the client </td></tr>
+    <tr><td class="paramname">req</td><td>The HTTP request. </td></tr>
+    <tr><td class="paramname">configs</td><td>The list of server configurations. </td></tr>
+    <tr><td class="paramname">client_port</td><td>The port number of the client connection. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>std::string The full HTTP response </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The full HTTP response as a string. </dd></dl>
 
 </div>
 </div>
@@ -364,14 +369,15 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Read the entire content of a file into a string. </p>
+<p>Reads the entire content of a file into a string. </p>
+<p>Opens the file at the given path and reads its contents. If the file cannot be opened, the returned string will be empty.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">filepath</td><td>The path to the file </td></tr>
+    <tr><td class="paramname">filepath</td><td>The path to the file. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>std::string The file content </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The file content as a string. </dd></dl>
 
 </div>
 </div>
@@ -398,14 +404,15 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Get the MIME type based on the file extension. </p>
+<p>Determines the MIME type based on the file extension. </p>
+<p>Returns a string representing the MIME type for common file extensions. Defaults to "text/plain" if the extension is unrecognized.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">filepath</td><td>The path to the file </td></tr>
+    <tr><td class="paramname">filepath</td><td>The path to the file. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>std::string The MIME type </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The MIME type as a string. </dd></dl>
 
 </div>
 </div>
@@ -436,15 +443,16 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Handle DELETE requests by removing files. </p>
+<p>Handles DELETE requests by removing files from the filesystem. </p>
+<p>Attempts to delete the file at the resolved path. Returns 404 if not found, 403 if a directory, 500 if deletion fails, or 204 No Content on success.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">loc_config</td><td>The location configuration </td></tr>
-    <tr><td class="paramname">uri</td><td>The request URI </td></tr>
+    <tr><td class="paramname">loc_config</td><td>The location configuration for the request. </td></tr>
+    <tr><td class="paramname">uri</td><td>The request URI. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>std::string The full HTTP response </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The full HTTP response as a string. </dd></dl>
 
 </div>
 </div>
@@ -475,15 +483,16 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Handle GET requests by serving files. </p>
+<p>Handles GET requests by serving files from the filesystem. </p>
+<p>Resolves the requested URI to a file path using the location configuration. Returns a 404 error if the file does not exist, or 403 if the path is a directory. Otherwise, reads the file and returns its content with the appropriate headers.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">loc_config</td><td>The location configuration </td></tr>
-    <tr><td class="paramname">uri</td><td>The request URI </td></tr>
+    <tr><td class="paramname">loc_config</td><td>The location configuration for the request. </td></tr>
+    <tr><td class="paramname">uri</td><td>The request URI. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>std::string The full HTTP response </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The full HTTP response as a string. </dd></dl>
 
 </div>
 </div>
@@ -514,15 +523,16 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Handle POST requests by saving uploaded files. </p>
+<p>Handles POST requests by saving uploaded files to the server. </p>
+<p>If the target path is a directory, generates a unique filename. Writes the request body to the file. Returns 201 Created on success, or an error response on failure.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">loc_config</td><td>The location configuration </td></tr>
-    <tr><td class="paramname">req</td><td>The HTTP request </td></tr>
+    <tr><td class="paramname">loc_config</td><td>The location configuration for the request. </td></tr>
+    <tr><td class="paramname">req</td><td>The HTTP request containing the file data. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>std::string The full HTTP response </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The full HTTP response as a string. </dd></dl>
 
 </div>
 </div>

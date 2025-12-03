@@ -2,12 +2,30 @@
 #include "../includes/Config.hpp" // Include your new parser
 #include "../includes/HttpResponse.hpp"
 
+/**
+ * @class Webserver
+ * @brief Implements a simple non-blocking HTTP web server using poll().
+ *
+ * Handles multiple client connections, parses HTTP requests, and generates responses.
+ */
+
+/**
+ * @brief Default constructor for the Webserver class.
+ */
 Webserver::Webserver() {}
+
+/**
+ * @brief Destructor for the Webserver class.
+ */
 Webserver::~Webserver() {}
 
 /**
  * @brief Initialize the webserver by setting up listening sockets for each unique port in the configs.
- * @param configs Vector of ServerConfig objects containing server settings.s
+ *
+ * Iterates through the provided server configurations, opens a listening socket for each unique port,
+ * and stores the configuration pointer for later use.
+ *
+ * @param configs Vector of ServerConfig objects containing server settings.
  */
 void Webserver::init(const std::vector<ServerConfig> &configs)
 {
@@ -38,9 +56,11 @@ void Webserver::init(const std::vector<ServerConfig> &configs)
 	}
 }
 
-// Setup the listening socket
 /**
  * @brief Initialize the listening socket for a specific port.
+ *
+ * Sets up a non-blocking socket, binds it to the specified port, and adds it to the pollfd vector.
+ *
  * @param port The port number to listen on.
  */
 void Webserver::initSocket(int port)
@@ -98,6 +118,8 @@ void Webserver::initSocket(int port)
 
 /**
  * @brief Run the webserver event loop.
+ *
+ * Uses poll() to monitor all sockets for incoming connections and data, and dispatches events to the appropriate handlers.
  */
 void Webserver::run()
 {
@@ -151,6 +173,9 @@ void Webserver::run()
 
 /**
  * @brief Handle reading data from a client socket.
+ *
+ * Reads incoming data, feeds it to the HTTP request parser, and prepares the HTTP response when the request is complete.
+ *
  * @param client_fd The file descriptor of the client socket.
  */
 void Webserver::handleClientRead(int client_fd)
@@ -162,7 +187,14 @@ void Webserver::handleClientRead(int client_fd)
 	{
 		close(client_fd);
 		_clients.erase(client_fd);
-		// Remove from _fds loop... (implement the removal logic properly as before)
+		for (std::vector<struct pollfd>::iterator it = _fds.begin(); it != _fds.end(); ++it)
+		{
+			if (it->fd == client_fd)
+			{
+				_fds.erase(it);
+				break;
+			}
+		}
 	}
 	else
 	{
@@ -200,9 +232,11 @@ void Webserver::handleClientRead(int client_fd)
 	}
 }
 
-// ONLY WRITES. Never calls recv().
 /**
  * @brief Handle writing data to a client socket.
+ *
+ * Sends the prepared HTTP response to the client. If the response is fully sent, marks the client as not ready to write.
+ *
  * @param client_fd The file descriptor of the client socket.
  */
 void Webserver::handleClientWrite(int client_fd)
@@ -239,7 +273,10 @@ void Webserver::handleClientWrite(int client_fd)
 }
 
 /**
- * @brief Accept a new client connection.
+ * @brief Accept a new client connection on a server socket.
+ *
+ * Accepts the connection, sets the client socket to non-blocking mode, and adds it to the pollfd vector and client map.
+ *
  * @param server_fd The file descriptor of the server socket.
  */
 void Webserver::acceptConnection(int server_fd)
@@ -280,7 +317,10 @@ void Webserver::acceptConnection(int server_fd)
 }
 
 /**
- * @brief Handle reading data from a client socket.
+ * @brief Handle reading data from a client socket (legacy/basic version).
+ *
+ * Reads data from the client, prints it, and sends a basic HTTP response. Also handles client disconnection and cleanup.
+ *
  * @param client_fd The file descriptor of the client socket.
  */
 void Webserver::handleClientData(int client_fd)

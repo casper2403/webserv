@@ -2,12 +2,11 @@
 #include <cstdlib> // for atoi
 #include <algorithm> // for std::find
 
-// Helper to remove semicolons from end of strings
 /**
- * @brief Trim semicolons from the end of a string
- * 
- * @param str The input string
- * @return std::string The trimmed string
+ * @brief Removes a trailing semicolon from a string, if present.
+ *
+ * @param str The input string to trim.
+ * @return std::string The trimmed string without a trailing semicolon.
  */
 static std::string trim(const std::string& str) {
     std::string s = str;
@@ -18,10 +17,11 @@ static std::string trim(const std::string& str) {
 }
 
 /**
- * @brief Parse the configuration file and return server configurations
- * 
- * @param filename Path to the configuration file
- * @return std::vector<ServerConfig> Vector of parsed server configurations
+ * @brief Parses the configuration file and returns a vector of server configurations.
+ *
+ * @param filename Path to the configuration file.
+ * @return std::vector<ServerConfig> Vector of parsed server configurations.
+ * @throws std::runtime_error If the file cannot be opened or if the config is invalid.
  */
 std::vector<ServerConfig> ConfigParser::parse(const std::string& filename) {
     std::ifstream file(filename.c_str());
@@ -54,10 +54,11 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string& filename) {
 }
 
 /**
- * @brief Parse a server block from the configuration
- * 
- * @param ss String stream containing the config data
- * @param config ServerConfig object to populate
+ * @brief Parses a server block from the configuration stream and populates a ServerConfig object.
+ *
+ * @param ss String stream containing the config data.
+ * @param config ServerConfig object to populate.
+ * @throws std::runtime_error If the server block is incomplete or invalid.
  */
 void ConfigParser::parseServerBlock(std::stringstream& ss, ServerConfig& config) {
     std::string token;
@@ -112,10 +113,10 @@ void ConfigParser::parseServerBlock(std::stringstream& ss, ServerConfig& config)
 }
 
 /**
- * @brief Parse a location block from the configuration
- * 
- * @param ss String stream containing the config data
- * @param loc LocationConfig object to populate
+ * @brief Parses a location block from the configuration stream and populates a LocationConfig object.
+ *
+ * @param ss String stream containing the config data.
+ * @param loc LocationConfig object to populate.
  */
 void ConfigParser::parseLocationBlock(std::stringstream& ss, LocationConfig& loc) {
     std::string token;
@@ -153,10 +154,10 @@ void ConfigParser::parseLocationBlock(std::stringstream& ss, LocationConfig& loc
 }
 
 /**
- * @brief Check if the given method is valid
- * 
- * @param method HTTP method string
- * @return true if valid, false otherwise
+ * @brief Checks if the given HTTP method is valid (GET, POST, DELETE).
+ *
+ * @param method HTTP method string.
+ * @return true if valid, false otherwise.
  */
 bool ConfigParser::isValidMethod(const std::string& method) {
     return (method == "GET" || method == "POST" || method == "DELETE");

@@ -1,17 +1,26 @@
 #include "../includes/HttpRequest.hpp"
 
 /**
- * @brief Construct a new HttpRequest object
- * 
+ * @class HttpRequest
+ * @brief Represents and parses an HTTP request, supporting both standard and chunked transfer encoding.
+ */
+
+/**
+ * @brief Construct a new HttpRequest object and initialize its state.
  */
 HttpRequest::HttpRequest() 
     : _state(STATE_REQUEST_LINE), _content_length(0), _chunk_length(0), _is_chunk_size(true) {}
 
+/**
+ * @brief Destroy the HttpRequest object.
+ */
 HttpRequest::~HttpRequest() {}
 
 /**
- * @brief Reset the HttpRequest object to initial state for keep-alive connections
+ * @brief Reset the HttpRequest object to its initial state for reuse (e.g., for keep-alive connections).
  * 
+ * This function clears all parsed data, including method, path, version, headers, body, and buffer.
+ * It also resets the content length, chunk length, and chunk size indicator.
  */
 void HttpRequest::reset() {
     _state = STATE_REQUEST_LINE;
@@ -26,16 +35,34 @@ void HttpRequest::reset() {
     _is_chunk_size = true;
 }
 
+/**
+ * @brief Get the HTTP method (e.g., GET, POST).
+ * @return The HTTP method as a string.
+ */
 std::string HttpRequest::getMethod() const { return _method; }
+
+/**
+ * @brief Get the requested path from the HTTP request line.
+ * @return The request path as a string.
+ */
 std::string HttpRequest::getPath() const { return _path; }
+
+/**
+ * @brief Get the body of the HTTP request.
+ * @return The request body as a string.
+ */
 std::string HttpRequest::getBody() const { return _body; }
+
+/**
+ * @brief Check if the HTTP request has been fully parsed.
+ * @return True if parsing is complete, false otherwise.
+ */
 bool HttpRequest::isFinished() const { return _state == STATE_COMPLETE; }
 
 /**
- * @brief Get the value of a specific header
- * 
- * @param key Header name
- * @return std::string Header value or empty string if not found
+ * @brief Get the value of a specific HTTP header.
+ * @param key The header name.
+ * @return The header value, or an empty string if not found.
  */
 std::string HttpRequest::getHeader(const std::string& key) const {
     std::map<std::string, std::string>::const_iterator it = _headers.find(key);
@@ -44,10 +71,11 @@ std::string HttpRequest::getHeader(const std::string& key) const {
 }
 
 /**
- * @brief Parse incoming raw data
- * 
- * @param raw_data Incoming data chunk
- * @return true if parsing is complete
+ * @brief Parse incoming raw data and update the request state.
+ *
+ * Appends new data to the buffer and processes it according to the current state.
+ * @param raw_data The incoming data chunk.
+ * @return True if the request is fully parsed, false otherwise.
  */
 bool HttpRequest::parse(const std::string& raw_data) {
     _buffer += raw_data;
@@ -69,8 +97,10 @@ bool HttpRequest::parse(const std::string& raw_data) {
 }
 
 /**
- * @brief Parse the request line (e.g., "GET /path HTTP/1.1")
- * 
+ * @brief Parse the HTTP request line (e.g., "GET /path HTTP/1.1").
+ *
+ * Extracts the method, path, and version from the first line of the request.
+ * Sets the state to STATE_HEADERS if successful, or STATE_COMPLETE on error.
  */
 void HttpRequest::parseRequestLine() {
     size_t pos = _buffer.find("\r\n");
@@ -91,8 +121,10 @@ void HttpRequest::parseRequestLine() {
 }
 
 /**
- * @brief Parse HTTP headers from the buffer
- * 
+ * @brief Parse HTTP headers from the buffer.
+ *
+ * Reads headers line by line until an empty line is found, then determines the next state
+ * based on Content-Length or Transfer-Encoding headers.
  */
 void HttpRequest::parseHeaders() {
     size_t pos;
@@ -132,8 +164,10 @@ void HttpRequest::parseHeaders() {
 }
 
 /**
- * @brief Parse the body based on Content-Length
- * 
+ * @brief Parse the request body based on Content-Length.
+ *
+ * Reads the specified number of bytes from the buffer into the body.
+ * Sets the state to STATE_COMPLETE when done.
  */
 void HttpRequest::parseBody() {
     if (_buffer.size() >= _content_length) {
@@ -144,8 +178,10 @@ void HttpRequest::parseBody() {
 }
 
 /**
- * @brief Parse chunked transfer encoded body
- * 
+ * @brief Parse a chunked transfer-encoded HTTP request body.
+ *
+ * Handles chunk size parsing, data extraction, and state transitions for chunked encoding.
+ * Sets the state to STATE_COMPLETE when the last chunk is received.
  */
 void HttpRequest::parseChunkedBody() {
     while (true) {
@@ -163,9 +199,10 @@ void HttpRequest::parseChunkedBody() {
             ss >> _chunk_length;
 
             if (_chunk_length == 0) {
-                // End of chunks. 
-                // Technically there might be trailers, but we'll assume end of request.
-                // Depending on implementation, we might need to consume one last \r\n
+                // End of chunks. Consume trailing CRLF
+                if (_buffer.substr(0, 2) == "\r\n" && _buffer.size() >= 2) {
+                    _buffer.erase(0, 2);
+                }
                 _state = STATE_COMPLETE;
                 return;
             }

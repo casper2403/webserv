@@ -3,11 +3,14 @@
 
 // --- 2.2 Location Matching (Simplified for now) ---
 /**
- * @brief Find the best matching location block for a given request path
- * 
- * @param server The server configuration
- * @param path The request URI path
- * @return const LocationConfig* Pointer to the matching location config, or nullptr if not found
+ * @brief Finds the best matching location block for a given request path.
+ *
+ * This function iterates through the server's location blocks and returns the one
+ * with the longest matching prefix for the given path. If no match is found, returns nullptr.
+ *
+ * @param server The server configuration containing location blocks.
+ * @param path The request URI path to match.
+ * @return Pointer to the best matching LocationConfig, or nullptr if none found.
  */
 const LocationConfig* HttpResponse::findMatchingLocation(const ServerConfig& server, const std::string& path) {
     const LocationConfig* best_match = NULL;
@@ -28,11 +31,15 @@ const LocationConfig* HttpResponse::findMatchingLocation(const ServerConfig& ser
 
 // --- 3.1 & 3.2 Path Resolution and File Read ---
 /**
- * @brief Handle GET requests by serving files
- * 
- * @param loc_config The location configuration
- * @param uri The request URI
- * @return std::string The full HTTP response
+ * @brief Handles GET requests by serving files from the filesystem.
+ *
+ * Resolves the requested URI to a file path using the location configuration.
+ * Returns a 404 error if the file does not exist, or 403 if the path is a directory.
+ * Otherwise, reads the file and returns its content with the appropriate headers.
+ *
+ * @param loc_config The location configuration for the request.
+ * @param uri The request URI.
+ * @return The full HTTP response as a string.
  */
 std::string HttpResponse::handleGetRequest(const LocationConfig& loc_config, const std::string& uri) {
     std::string filepath;
@@ -61,10 +68,13 @@ std::string HttpResponse::handleGetRequest(const LocationConfig& loc_config, con
 
 // Simplified File Content Reader
 /**
- * @brief Read the entire content of a file into a string
- * 
- * @param filepath The path to the file
- * @return std::string The file content
+ * @brief Reads the entire content of a file into a string.
+ *
+ * Opens the file at the given path and reads its contents. If the file cannot be opened,
+ * the returned string will be empty.
+ *
+ * @param filepath The path to the file.
+ * @return The file content as a string.
  */
 std::string HttpResponse::getFileContent(const std::string& filepath) {
     std::ifstream ifs(filepath.c_str());
@@ -74,10 +84,13 @@ std::string HttpResponse::getFileContent(const std::string& filepath) {
 }
 
 /**
- * @brief Get the MIME type based on the file extension
- * 
- * @param filepath The path to the file
- * @return std::string The MIME type
+ * @brief Determines the MIME type based on the file extension.
+ *
+ * Returns a string representing the MIME type for common file extensions.
+ * Defaults to "text/plain" if the extension is unrecognized.
+ *
+ * @param filepath The path to the file.
+ * @return The MIME type as a string.
  */
 std::string HttpResponse::getMimeType(const std::string& filepath) {
     if (filepath.rfind(".html") != std::string::npos) return "text/html";
@@ -88,13 +101,16 @@ std::string HttpResponse::getMimeType(const std::string& filepath) {
 }
 
 /**
- * @brief Build the HTTP response header
- * 
- * @param status_code The HTTP status code
- * @param status_text The HTTP status text
- * @param content_length The length of the response body
- * @param content_type The MIME type of the response body
- * @return std::string The complete HTTP response header
+ * @brief Builds the HTTP response header.
+ *
+ * Constructs the HTTP response header string with the given status code, status text,
+ * content length, and content type.
+ *
+ * @param status_code The HTTP status code (e.g., 200, 404).
+ * @param status_text The HTTP status text (e.g., "OK", "Not Found").
+ * @param content_length The length of the response body in bytes.
+ * @param content_type The MIME type of the response body.
+ * @return The complete HTTP response header as a string.
  */
 std::string HttpResponse::buildResponseHeader(int status_code, const std::string& status_text, size_t content_length, const std::string& content_type) {
     std::stringstream ss;
@@ -108,11 +124,14 @@ std::string HttpResponse::buildResponseHeader(int status_code, const std::string
 
 // --- 4.1 Simple Error Response Generator ---
 /**
- * @brief Build a simple error response page
- * 
- * @param status_code The HTTP status code
- * @param server_config The server configuration (for custom error pages, if any)
- * @return std::string The full HTTP error response
+ * @brief Builds a simple HTTP error response page.
+ *
+ * Generates a basic HTML error page for common HTTP error codes (404, 405, 403, 500).
+ * Optionally uses the server configuration for custom error pages (not implemented).
+ *
+ * @param status_code The HTTP status code for the error.
+ * @param server_config The server configuration (unused, for future custom error pages).
+ * @return The full HTTP error response as a string.
  */
 std::string HttpResponse::buildErrorResponse(int status_code, const ServerConfig* server_config) {
     (void)server_config;
@@ -139,12 +158,15 @@ std::string HttpResponse::buildErrorResponse(int status_code, const ServerConfig
 }
 
 /**
- * @brief Find the best matching server block for a given request
- * 
- * @param req The HTTP request
- * @param configs The list of server configurations
- * @param client_port The port of the client
- * @return const ServerConfig* Pointer to the matching server config, or nullptr if not found
+ * @brief Finds the best matching server block for a given request.
+ *
+ * Searches the list of server configurations for one matching the client's port.
+ * If none match, returns the first server config if available, otherwise nullptr.
+ *
+ * @param req The HTTP request.
+ * @param configs The list of server configurations.
+ * @param client_port The port number of the client connection.
+ * @return Pointer to the matching ServerConfig, or nullptr if not found.
  */
 const ServerConfig* HttpResponse::findMatchingServer(const HttpRequest& req, const std::vector<ServerConfig>& configs, int client_port) {
     (void)req;
@@ -161,12 +183,15 @@ const ServerConfig* HttpResponse::findMatchingServer(const HttpRequest& req, con
 }
 
 /**
- * @brief Generate the HTTP response for a given request
- * 
- * @param req The HTTP request
- * @param configs The list of server configurations
- * @param client_port The port of the client
- * @return std::string The full HTTP response
+ * @brief Generates the HTTP response for a given request.
+ *
+ * Determines the appropriate server and location configuration, checks if the method is allowed,
+ * and dispatches to the correct handler (GET, POST, DELETE). Returns an error response if needed.
+ *
+ * @param req The HTTP request.
+ * @param configs The list of server configurations.
+ * @param client_port The port number of the client connection.
+ * @return The full HTTP response as a string.
  */
 std::string HttpResponse::generateResponse(const HttpRequest& req, const std::vector<ServerConfig>& configs, int client_port) {
     const ServerConfig* server_config = findMatchingServer(req, configs, client_port);
@@ -202,11 +227,14 @@ std::string HttpResponse::generateResponse(const HttpRequest& req, const std::ve
 
 // --- DELETE HANDLER ---
 /**
- * @brief Handle DELETE requests by removing files
- * 
- * @param loc_config The location configuration
- * @param uri The request URI
- * @return std::string The full HTTP response
+ * @brief Handles DELETE requests by removing files from the filesystem.
+ *
+ * Attempts to delete the file at the resolved path. Returns 404 if not found, 403 if a directory,
+ * 500 if deletion fails, or 204 No Content on success.
+ *
+ * @param loc_config The location configuration for the request.
+ * @param uri The request URI.
+ * @return The full HTTP response as a string.
  */
 std::string HttpResponse::handleDeleteRequest(const LocationConfig& loc_config, const std::string& uri) {
     std::string filepath = loc_config.root + uri;
@@ -229,11 +257,14 @@ std::string HttpResponse::handleDeleteRequest(const LocationConfig& loc_config, 
 
 // --- POST HANDLER (File Upload) ---
 /**
- * @brief Handle POST requests by saving uploaded files
- * 
- * @param loc_config The location configuration
- * @param req The HTTP request
- * @return std::string The full HTTP response
+ * @brief Handles POST requests by saving uploaded files to the server.
+ *
+ * If the target path is a directory, generates a unique filename. Writes the request body to the file.
+ * Returns 201 Created on success, or an error response on failure.
+ *
+ * @param loc_config The location configuration for the request.
+ * @param req The HTTP request containing the file data.
+ * @return The full HTTP response as a string.
  */
 std::string HttpResponse::handlePostRequest(const LocationConfig& loc_config, const HttpRequest& req) {
     // 1. Determine the final file path
