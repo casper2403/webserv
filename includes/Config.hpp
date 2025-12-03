@@ -15,9 +15,9 @@ struct LocationConfig {
     bool autoindex;
     std::vector<std::string> methods; // GET, POST, DELETE
     std::string return_path; // For redirections
-    // Add upload paths, cgi extensions etc. later
+    int return_code;         // e.g. 301, 302
 
-    LocationConfig() : autoindex(false) {}
+    LocationConfig() : autoindex(false), return_code(0) {}
 };
 
 struct ServerConfig {
@@ -26,9 +26,10 @@ struct ServerConfig {
     std::string root;
     std::vector<std::string> server_names;
     std::map<int, std::string> error_pages;
-    unsigned long client_max_body_size;
+    unsigned long client_max_body_size; // In bytes
     std::vector<LocationConfig> locations;
 
+    // Default: 80, 0.0.0.0, 1MB max body
     ServerConfig() : port(80), host("0.0.0.0"), root("./"), client_max_body_size(1024 * 1024) {}
 };
 
@@ -39,6 +40,7 @@ public:
 private:
     void parseServerBlock(std::stringstream& ss, ServerConfig& config);
     void parseLocationBlock(std::stringstream& ss, LocationConfig& location);
+    bool isValidMethod(const std::string& method);
 };
 
 #endif

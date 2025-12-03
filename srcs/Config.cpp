@@ -1,5 +1,6 @@
 #include "../includes/Config.hpp"
 #include <cstdlib> // for atoi
+#include <algorithm> // for std::find
 
 // Helper to remove semicolons from end of strings
 static std::string trim(const std::string& str) {
@@ -59,6 +60,23 @@ void ConfigParser::parseServerBlock(std::stringstream& ss, ServerConfig& config)
         } else if (token == "root") {
             ss >> config.root;
             config.root = trim(config.root);
+        } else if (token == "error_page") {
+            // Syntax: error_page 404 /404.html;
+            int code;
+            std::string path;
+            ss >> code >> path;
+            config.error_pages[code] = trim(path);
+        } else if (token == "client_max_body_size") {
+            // Syntax: client_max_body_size 10M;
+            std::string sizeStr;
+            ss >> sizeStr;
+            sizeStr = trim(sizeStr);
+            unsigned long size = std::atol(sizeStr.c_str());
+            char unit = sizeStr[sizeStr.size() - 1];
+            if (unit == 'K' || unit == 'k') size *= 1024;
+            else if (unit == 'M' || unit == 'm') size *= 1024 * 1024;
+            else if (unit == 'G' || unit == 'g') size *= 1024 * 1024 * 1024;
+            config.client_max_body_size = size;
         } else if (token == "location") {
             std::string path;
             ss >> path;
@@ -71,7 +89,6 @@ void ConfigParser::parseServerBlock(std::stringstream& ss, ServerConfig& config)
             parseLocationBlock(ss, loc);
             config.locations.push_back(loc);
         }
-        // Add more directives (error_page, client_max_body_size) here
     }
     throw std::runtime_error("Error: Unexpected end of file inside server block");
 }
@@ -91,8 +108,26 @@ void ConfigParser::parseLocationBlock(std::stringstream& ss, LocationConfig& loc
             std::string val;
             ss >> val;
             loc.autoindex = (trim(val) == "on");
+        } else if (token == "allow_methods") {
+            // Syntax: allow_methods GET POST DELETE;
+            // Loop until we hit a token that contains ';'
+            std::string method;
+            while (ss >> method) {
+                std::string cleanMethod = trim(method);
+                if (isValidMethod(cleanMethod)) {
+                    loc.methods.push_back(cleanMethod);
+                }
+                if (method.find(';') != std::string::npos) break;
+            }
+        } else if (token == "return") {
+            // Syntax: return 301 /newpath;
+            ss >> loc.return_code;
+            ss >> loc.return_path;
+            loc.return_path = trim(loc.return_path);
         }
-        // Add methods, return, etc. here
     }
-    throw std::runtime_error("Error: Unexpected end of file inside location block");
+}
+
+bool ConfigParser::isValidMethod(const std::string& method) {
+    return (method == "GET" || method == "POST" || method == "DELETE");
 }
