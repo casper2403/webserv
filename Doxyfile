@@ -1,7 +1,7 @@
 # Doxyfile for Webserv
 PROJECT_NAME           = "Webserv"
 PROJECT_BRIEF          = "A C++98 HTTP Server"
-OUTPUT_DIRECTORY       = docs
+OUTPUT_DIRECTORY       = www
 
 # Input settings
 # We point directly to your source and include directories
@@ -12,7 +12,7 @@ FILE_PATTERNS          = *.cpp *.hpp *.md
 # Output settings
 GENERATE_HTML          = YES
 GENERATE_LATEX         = NO
-HTML_OUTPUT            = html
+HTML_OUTPUT            = .
 HTML_FILE_EXTENSION    = .html
 
 # Parsing settings
