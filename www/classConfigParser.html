@@ -98,16 +98,16 @@ $(function(){initNavTree('classConfigParser.html','',''); });
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a3a5b70e5cff89e7d04477ccfa4661ca2" id="r_a3a5b70e5cff89e7d04477ccfa4661ca2"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structServerConfig.html">ServerConfig</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3a5b70e5cff89e7d04477ccfa4661ca2">parse</a> (const std::string &amp;filename)</td></tr>
-<tr class="memdesc:a3a5b70e5cff89e7d04477ccfa4661ca2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse the configuration file and return server configurations.  <br /></td></tr>
+<tr class="memdesc:a3a5b70e5cff89e7d04477ccfa4661ca2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parses the configuration file and returns a vector of server configurations.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pri-methods" class="groupheader"><a id="pri-methods" name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
 <tr class="memitem:a478021574cc26149a624f670ab758f4d" id="r_a478021574cc26149a624f670ab758f4d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a478021574cc26149a624f670ab758f4d">parseServerBlock</a> (std::stringstream &amp;ss, <a class="el" href="structServerConfig.html">ServerConfig</a> &amp;config)</td></tr>
-<tr class="memdesc:a478021574cc26149a624f670ab758f4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse a server block from the configuration.  <br /></td></tr>
+<tr class="memdesc:a478021574cc26149a624f670ab758f4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parses a server block from the configuration stream and populates a <a class="el" href="structServerConfig.html">ServerConfig</a> object.  <br /></td></tr>
 <tr class="memitem:a2a760c08d0a29fadcc411916a50c30a7" id="r_a2a760c08d0a29fadcc411916a50c30a7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2a760c08d0a29fadcc411916a50c30a7">parseLocationBlock</a> (std::stringstream &amp;ss, <a class="el" href="structLocationConfig.html">LocationConfig</a> &amp;location)</td></tr>
-<tr class="memdesc:a2a760c08d0a29fadcc411916a50c30a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse a location block from the configuration.  <br /></td></tr>
+<tr class="memdesc:a2a760c08d0a29fadcc411916a50c30a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parses a location block from the configuration stream and populates a <a class="el" href="structLocationConfig.html">LocationConfig</a> object.  <br /></td></tr>
 <tr class="memitem:a90169eacbf650a8fc0ea4d8a43842a31" id="r_a90169eacbf650a8fc0ea4d8a43842a31"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a90169eacbf650a8fc0ea4d8a43842a31">isValidMethod</a> (const std::string &amp;method)</td></tr>
-<tr class="memdesc:a90169eacbf650a8fc0ea4d8a43842a31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the given method is valid.  <br /></td></tr>
+<tr class="memdesc:a90169eacbf650a8fc0ea4d8a43842a31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the given HTTP method is valid (GET, POST, DELETE).  <br /></td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a90169eacbf650a8fc0ea4d8a43842a31" name="a90169eacbf650a8fc0ea4d8a43842a31"></a>
@@ -133,14 +133,14 @@ Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Check if the given method is valid. </p>
+<p>Checks if the given HTTP method is valid (GET, POST, DELETE). </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">method</td><td>HTTP method string </td></tr>
+    <tr><td class="paramname">method</td><td>HTTP method string. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>true if valid, false otherwise </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>true if valid, false otherwise. </dd></dl>
 
 </div>
 </div>
@@ -159,14 +159,20 @@ Private Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Parse the configuration file and return server configurations. </p>
+<p>Parses the configuration file and returns a vector of server configurations. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">filename</td><td>Path to the configuration file </td></tr>
+    <tr><td class="paramname">filename</td><td>Path to the configuration file. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>std::vector&lt;ServerConfig&gt; Vector of parsed server configurations </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>std::vector&lt;ServerConfig&gt; Vector of parsed server configurations. </dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">std::runtime_error</td><td>If the file cannot be opened or if the config is invalid. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -197,11 +203,11 @@ Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Parse a location block from the configuration. </p>
+<p>Parses a location block from the configuration stream and populates a <a class="el" href="structLocationConfig.html">LocationConfig</a> object. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ss</td><td>String stream containing the config data </td></tr>
-    <tr><td class="paramname">loc</td><td><a class="el" href="structLocationConfig.html">LocationConfig</a> object to populate </td></tr>
+    <tr><td class="paramname">ss</td><td>String stream containing the config data. </td></tr>
+    <tr><td class="paramname">loc</td><td><a class="el" href="structLocationConfig.html">LocationConfig</a> object to populate. </td></tr>
   </table>
   </dd>
 </dl>
@@ -235,11 +241,17 @@ Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Parse a server block from the configuration. </p>
+<p>Parses a server block from the configuration stream and populates a <a class="el" href="structServerConfig.html">ServerConfig</a> object. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ss</td><td>String stream containing the config data </td></tr>
-    <tr><td class="paramname">config</td><td><a class="el" href="structServerConfig.html">ServerConfig</a> object to populate </td></tr>
+    <tr><td class="paramname">ss</td><td>String stream containing the config data. </td></tr>
+    <tr><td class="paramname">config</td><td><a class="el" href="structServerConfig.html">ServerConfig</a> object to populate. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">std::runtime_error</td><td>If the server block is incomplete or invalid. </td></tr>
   </table>
   </dd>
 </dl>

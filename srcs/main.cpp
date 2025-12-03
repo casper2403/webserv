@@ -1,12 +1,23 @@
+/**
+ * @file main.cpp
+ * @brief Main entry point for the web server application.
+ *
+ * This file contains the main function that initializes and starts the web server.
+ * It parses the configuration file, sets up the server, and runs it.
+ */
+
 #include "../includes/Webserver.hpp"
 #include "../includes/Config.hpp" // Include your new parser
 
 /**
- * @brief The main entry point for the web server application
- * 
+ * @brief Main entry point for the web server application.
+ *
+ * This function parses the configuration file provided as a command-line argument,
+ * initializes the web server with the parsed configuration, and starts the server loop.
+ *
  * @param argc Argument count
  * @param argv Argument vector
- * @return int Exit status
+ * @return int Exit status code (0 on success, 1 on error)
  */
 int main(int argc, char **argv) {
     if (argc != 2) {

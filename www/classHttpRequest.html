@@ -93,34 +93,42 @@ $(function(){initNavTree('classHttpRequest.html','',''); });
 </div><!--header-->
 <div class="contents">
 
+<p>Represents and parses an HTTP request, supporting both standard and chunked transfer encoding.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="HttpRequest_8hpp_source.html">HttpRequest.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a42b01e8d23e15e65ad9c712922a6a812" id="r_a42b01e8d23e15e65ad9c712922a6a812"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a42b01e8d23e15e65ad9c712922a6a812">HttpRequest</a> ()</td></tr>
-<tr class="memdesc:a42b01e8d23e15e65ad9c712922a6a812"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classHttpRequest.html">HttpRequest</a> object.  <br /></td></tr>
+<tr class="memdesc:a42b01e8d23e15e65ad9c712922a6a812"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classHttpRequest.html" title="Represents and parses an HTTP request, supporting both standard and chunked transfer encoding.">HttpRequest</a> object and initialize its state.  <br /></td></tr>
 <tr class="memitem:adfc7ae561e6ba03d21890ee1855df72b" id="r_adfc7ae561e6ba03d21890ee1855df72b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adfc7ae561e6ba03d21890ee1855df72b">~HttpRequest</a> ()</td></tr>
+<tr class="memdesc:adfc7ae561e6ba03d21890ee1855df72b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy the <a class="el" href="classHttpRequest.html" title="Represents and parses an HTTP request, supporting both standard and chunked transfer encoding.">HttpRequest</a> object.  <br /></td></tr>
 <tr class="memitem:ac23b77db121cbf01f98a3b36e5a790a4" id="r_ac23b77db121cbf01f98a3b36e5a790a4"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac23b77db121cbf01f98a3b36e5a790a4">parse</a> (const std::string &amp;raw_data)</td></tr>
-<tr class="memdesc:ac23b77db121cbf01f98a3b36e5a790a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse incoming raw data.  <br /></td></tr>
+<tr class="memdesc:ac23b77db121cbf01f98a3b36e5a790a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse incoming raw data and update the request state.  <br /></td></tr>
 <tr class="memitem:a923b05afd4713ecae84b2c311a1fa152" id="r_a923b05afd4713ecae84b2c311a1fa152"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a923b05afd4713ecae84b2c311a1fa152">getMethod</a> () const</td></tr>
+<tr class="memdesc:a923b05afd4713ecae84b2c311a1fa152"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the HTTP method (e.g., GET, POST).  <br /></td></tr>
 <tr class="memitem:acde519e492e10352bc39d6a3bcd857b2" id="r_acde519e492e10352bc39d6a3bcd857b2"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acde519e492e10352bc39d6a3bcd857b2">getPath</a> () const</td></tr>
+<tr class="memdesc:acde519e492e10352bc39d6a3bcd857b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the requested path from the HTTP request line.  <br /></td></tr>
 <tr class="memitem:a1de31501156964fe40cd4141afca0fec" id="r_a1de31501156964fe40cd4141afca0fec"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1de31501156964fe40cd4141afca0fec">getHeader</a> (const std::string &amp;key) const</td></tr>
-<tr class="memdesc:a1de31501156964fe40cd4141afca0fec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of a specific header.  <br /></td></tr>
+<tr class="memdesc:a1de31501156964fe40cd4141afca0fec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of a specific HTTP header.  <br /></td></tr>
 <tr class="memitem:a5545f1aab618ff9c43f42755511bef18" id="r_a5545f1aab618ff9c43f42755511bef18"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5545f1aab618ff9c43f42755511bef18">getBody</a> () const</td></tr>
+<tr class="memdesc:a5545f1aab618ff9c43f42755511bef18"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the body of the HTTP request.  <br /></td></tr>
 <tr class="memitem:ad9ae1cfa63baea3dfc94681776d23bed" id="r_ad9ae1cfa63baea3dfc94681776d23bed"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad9ae1cfa63baea3dfc94681776d23bed">isFinished</a> () const</td></tr>
+<tr class="memdesc:ad9ae1cfa63baea3dfc94681776d23bed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the HTTP request has been fully parsed.  <br /></td></tr>
 <tr class="memitem:a4925576ef697cbf8ada8b89db0f810f6" id="r_a4925576ef697cbf8ada8b89db0f810f6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4925576ef697cbf8ada8b89db0f810f6">reset</a> ()</td></tr>
-<tr class="memdesc:a4925576ef697cbf8ada8b89db0f810f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reset the <a class="el" href="classHttpRequest.html">HttpRequest</a> object to initial state for keep-alive connections.  <br /></td></tr>
+<tr class="memdesc:a4925576ef697cbf8ada8b89db0f810f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reset the <a class="el" href="classHttpRequest.html" title="Represents and parses an HTTP request, supporting both standard and chunked transfer encoding.">HttpRequest</a> object to its initial state for reuse (e.g., for keep-alive connections).  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pri-methods" class="groupheader"><a id="pri-methods" name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
 <tr class="memitem:abb4a3b1e98141083d6342bf2724d7091" id="r_abb4a3b1e98141083d6342bf2724d7091"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abb4a3b1e98141083d6342bf2724d7091">parseRequestLine</a> ()</td></tr>
-<tr class="memdesc:abb4a3b1e98141083d6342bf2724d7091"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse the request line (e.g., "GET /path HTTP/1.1").  <br /></td></tr>
+<tr class="memdesc:abb4a3b1e98141083d6342bf2724d7091"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse the HTTP request line (e.g., "GET /path HTTP/1.1").  <br /></td></tr>
 <tr class="memitem:a4fdf5e84078d34d9ea3646b0418268d2" id="r_a4fdf5e84078d34d9ea3646b0418268d2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4fdf5e84078d34d9ea3646b0418268d2">parseHeaders</a> ()</td></tr>
 <tr class="memdesc:a4fdf5e84078d34d9ea3646b0418268d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse HTTP headers from the buffer.  <br /></td></tr>
 <tr class="memitem:a86458b1fe04c164c6ab32c4b1e16413d" id="r_a86458b1fe04c164c6ab32c4b1e16413d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a86458b1fe04c164c6ab32c4b1e16413d">parseBody</a> ()</td></tr>
-<tr class="memdesc:a86458b1fe04c164c6ab32c4b1e16413d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse the body based on Content-Length.  <br /></td></tr>
+<tr class="memdesc:a86458b1fe04c164c6ab32c4b1e16413d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse the request body based on Content-Length.  <br /></td></tr>
 <tr class="memitem:a03facfb736c498a11e8c08c540e02aa2" id="r_a03facfb736c498a11e8c08c540e02aa2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a03facfb736c498a11e8c08c540e02aa2">parseChunkedBody</a> ()</td></tr>
-<tr class="memdesc:a03facfb736c498a11e8c08c540e02aa2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse chunked transfer encoded body.  <br /></td></tr>
+<tr class="memdesc:a03facfb736c498a11e8c08c540e02aa2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse a chunked transfer-encoded HTTP request body.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pri-attribs" class="groupheader"><a id="pri-attribs" name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
@@ -135,7 +143,9 @@ Private Attributes</h2></td></tr>
 <tr class="memitem:a8356e419ce67bbed8645e2a6b021278f" id="r_a8356e419ce67bbed8645e2a6b021278f"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8356e419ce67bbed8645e2a6b021278f">_chunk_length</a></td></tr>
 <tr class="memitem:acb46a8c06224de491854648de08c5c04" id="r_acb46a8c06224de491854648de08c5c04"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acb46a8c06224de491854648de08c5c04">_is_chunk_size</a></td></tr>
 </table>
-<a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Represents and parses an HTTP request, supporting both standard and chunked transfer encoding. </p>
+</div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a42b01e8d23e15e65ad9c712922a6a812" name="a42b01e8d23e15e65ad9c712922a6a812"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a42b01e8d23e15e65ad9c712922a6a812">&#9670;&#160;</a></span>HttpRequest()</h2>
 
@@ -151,7 +161,7 @@ Private Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Construct a new <a class="el" href="classHttpRequest.html">HttpRequest</a> object. </p>
+<p>Construct a new <a class="el" href="classHttpRequest.html" title="Represents and parses an HTTP request, supporting both standard and chunked transfer encoding.">HttpRequest</a> object and initialize its state. </p>
 
 </div>
 </div>
@@ -169,6 +179,8 @@ Private Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Destroy the <a class="el" href="classHttpRequest.html" title="Represents and parses an HTTP request, supporting both standard and chunked transfer encoding.">HttpRequest</a> object. </p>
 
 </div>
 </div>
@@ -188,6 +200,9 @@ Private Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Get the body of the HTTP request. </p>
+<dl class="section return"><dt>Returns</dt><dd>The request body as a string. </dd></dl>
+
 </div>
 </div>
 <a id="a1de31501156964fe40cd4141afca0fec" name="a1de31501156964fe40cd4141afca0fec"></a>
@@ -205,14 +220,14 @@ Private Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Get the value of a specific header. </p>
+<p>Get the value of a specific HTTP header. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">key</td><td>Header name </td></tr>
+    <tr><td class="paramname">key</td><td>The header name. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>std::string Header value or empty string if not found </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The header value, or an empty string if not found. </dd></dl>
 
 </div>
 </div>
@@ -231,6 +246,9 @@ Private Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Get the HTTP method (e.g., GET, POST). </p>
+<dl class="section return"><dt>Returns</dt><dd>The HTTP method as a string. </dd></dl>
+
 </div>
 </div>
 <a id="acde519e492e10352bc39d6a3bcd857b2" name="acde519e492e10352bc39d6a3bcd857b2"></a>
@@ -247,6 +265,9 @@ Private Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Get the requested path from the HTTP request line. </p>
+<dl class="section return"><dt>Returns</dt><dd>The request path as a string. </dd></dl>
 
 </div>
 </div>
@@ -265,6 +286,9 @@ Private Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Check if the HTTP request has been fully parsed. </p>
+<dl class="section return"><dt>Returns</dt><dd>True if parsing is complete, false otherwise. </dd></dl>
+
 </div>
 </div>
 <a id="ac23b77db121cbf01f98a3b36e5a790a4" name="ac23b77db121cbf01f98a3b36e5a790a4"></a>
@@ -282,14 +306,14 @@ Private Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Parse incoming raw data. </p>
-<dl class="params"><dt>Parameters</dt><dd>
+<p>Parse incoming raw data and update the request state. </p>
+<p>Appends new data to the buffer and processes it according to the current state. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">raw_data</td><td>Incoming data chunk </td></tr>
+    <tr><td class="paramname">raw_data</td><td>The incoming data chunk. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>true if parsing is complete </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the request is fully parsed, false otherwise. </dd></dl>
 
 </div>
 </div>
@@ -316,7 +340,8 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Parse the body based on Content-Length. </p>
+<p>Parse the request body based on Content-Length. </p>
+<p>Reads the specified number of bytes from the buffer into the body. Sets the state to STATE_COMPLETE when done. </p>
 
 </div>
 </div>
@@ -343,7 +368,8 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Parse chunked transfer encoded body. </p>
+<p>Parse a chunked transfer-encoded HTTP request body. </p>
+<p>Handles chunk size parsing, data extraction, and state transitions for chunked encoding. Sets the state to STATE_COMPLETE when the last chunk is received. </p>
 
 </div>
 </div>
@@ -371,6 +397,7 @@ Private Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Parse HTTP headers from the buffer. </p>
+<p>Reads headers line by line until an empty line is found, then determines the next state based on Content-Length or Transfer-Encoding headers. </p>
 
 </div>
 </div>
@@ -397,7 +424,8 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Parse the request line (e.g., "GET /path HTTP/1.1"). </p>
+<p>Parse the HTTP request line (e.g., "GET /path HTTP/1.1"). </p>
+<p>Extracts the method, path, and version from the first line of the request. Sets the state to STATE_HEADERS if successful, or STATE_COMPLETE on error. </p>
 
 </div>
 </div>
@@ -416,7 +444,8 @@ Private Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Reset the <a class="el" href="classHttpRequest.html">HttpRequest</a> object to initial state for keep-alive connections. </p>
+<p>Reset the <a class="el" href="classHttpRequest.html" title="Represents and parses an HTTP request, supporting both standard and chunked transfer encoding.">HttpRequest</a> object to its initial state for reuse (e.g., for keep-alive connections). </p>
+<p>This function clears all parsed data, including method, path, version, headers, body, and buffer. It also resets the content length, chunk length, and chunk size indicator. </p>
 
 </div>
 </div>
