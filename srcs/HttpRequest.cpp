@@ -178,11 +178,11 @@ void HttpRequest::parseBody() {
 }
 
 /**
- * @brief Parse a chunked transfer-encoded HTTP request body.
+ * @brief Parse a chunked transfer encoded body.
  *
- * Handles chunk size parsing, data extraction, and state transitions for chunked encoding.
- * Sets the state to STATE_COMPLETE when the last chunk is received.
- */
+ * Reads chunks of data according to the chunked transfer encoding rules.
+ * Sets the state to STATE_COMPLETE when the final chunk is received.
+*/
 void HttpRequest::parseChunkedBody() {
     while (true) {
         if (_is_chunk_size) {
@@ -199,9 +199,10 @@ void HttpRequest::parseChunkedBody() {
             ss >> _chunk_length;
 
             if (_chunk_length == 0) {
-                // End of chunks. 
-                // Technically there might be trailers, but we'll assume end of request.
-                // Depending on implementation, we might need to consume one last \r\n
+                // End of chunks. Consume trailing CRLF
+                if (_buffer.substr(0, 2) == "\r\n" && _buffer.size() >= 2) {
+                    _buffer.erase(0, 2);
+                }
                 _state = STATE_COMPLETE;
                 return;
             }

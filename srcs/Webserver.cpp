@@ -174,7 +174,7 @@ void Webserver::run()
 /**
  * @brief Handle reading data from a client socket.
  *
- * Reads data from the client, parses the HTTP request, and prepares the response if the request is complete.
+ * Reads incoming data, feeds it to the HTTP request parser, and prepares the HTTP response when the request is complete.
  *
  * @param client_fd The file descriptor of the client socket.
  */
@@ -187,7 +187,14 @@ void Webserver::handleClientRead(int client_fd)
 	{
 		close(client_fd);
 		_clients.erase(client_fd);
-		// Remove from _fds loop... (implement the removal logic properly as before)
+		for (std::vector<struct pollfd>::iterator it = _fds.begin(); it != _fds.end(); ++it)
+		{
+			if (it->fd == client_fd)
+			{
+				_fds.erase(it);
+				break;
+			}
+		}
 	}
 	else
 	{
