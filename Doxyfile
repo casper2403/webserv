@@ -1,0 +1,32 @@
+# Doxyfile for Webserv
+PROJECT_NAME           = "Webserv"
+PROJECT_BRIEF          = "A C++98 HTTP Server"
+OUTPUT_DIRECTORY       = docs
+
+# Input settings
+# We point directly to your source and include directories
+INPUT                  = includes srcs README.md
+RECURSIVE              = YES
+FILE_PATTERNS          = *.cpp *.hpp *.md
+
+# Output settings
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+HTML_OUTPUT            = html
+HTML_FILE_EXTENSION    = .html
+
+# Parsing settings
+# EXTRACT_ALL = YES means it will document functions even if you haven't written comments for them yet
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+OPTIMIZE_OUTPUT_FOR_C  = YES
+
+# Visual settings
+# If you don't have Graphviz installed (common if no sudo), we disable DOT to prevent errors
+HAVE_DOT               = NO
+# Check if you want the sidebar navigation
+GENERATE_TREEVIEW      = YES
+
+# Helper to strip the path from the file names in the docs
+FULL_PATH_NAMES        = NO

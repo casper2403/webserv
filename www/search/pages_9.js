@@ -1,0 +1,4 @@
+var searchData=
+[
+  ['list_20immediate_20priorities_0',['🛠 To-Do List (Immediate Priorities)',['../md_README.html#autotoc_md5',1,'']]]
+];
