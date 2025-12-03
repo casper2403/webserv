@@ -128,30 +128,76 @@ const ServerConfig* HttpResponse::findMatchingServer(const HttpRequest& req, con
     return NULL;
 }
 
-// The main dispatcher function
 std::string HttpResponse::generateResponse(const HttpRequest& req, const std::vector<ServerConfig>& configs, int client_port) {
     const ServerConfig* server_config = findMatchingServer(req, configs, client_port);
-    
-    // Fallback if no server config is found (e.g., in a complex network setup)
-    if (!server_config) {
-        return buildErrorResponse(500, NULL);
-    }
+    if (!server_config) return buildErrorResponse(500, NULL);
     
     const LocationConfig* loc_config = findMatchingLocation(*server_config, req.getPath());
-    
-    if (!loc_config) {
-        // This should not happen if we have a default 'location /'
-        return buildErrorResponse(404, server_config); 
+    if (!loc_config) return buildErrorResponse(404, server_config); 
+
+    // Method Allowed Check
+    bool method_allowed = false;
+    if (loc_config->methods.empty()) {
+        if (req.getMethod() == "GET") method_allowed = true;
+    } else {
+        for (size_t i = 0; i < loc_config->methods.size(); ++i) {
+            if (loc_config->methods[i] == req.getMethod()) {
+                method_allowed = true;
+                break;
+            }
+        }
     }
 
-    // --- 4.2 Method Check ---
+    if (!method_allowed) return buildErrorResponse(405, server_config);
+
+    // Dispatch
     if (req.getMethod() == "GET") {
         return handleGetRequest(*loc_config, req.getPath());
-    } else if (req.getMethod() == "POST" || req.getMethod() == "DELETE") {
-        // Placeholder for future implementation
-        return buildErrorResponse(405, server_config);
+    } else if (req.getMethod() == "DELETE") {
+        return handleDeleteRequest(*loc_config, req.getPath());
+    } else if (req.getMethod() == "POST") {
+        return handlePostRequest(*loc_config, req);
     } else {
-        // Any other method is not supported
-        return buildErrorResponse(405, server_config);
+        return buildErrorResponse(501, server_config); // Not Implemented
     }
+}
+
+// ... [Keep handleGetRequest] ...
+
+// --- DELETE HANDLER (New) ---
+std::string HttpResponse::handleDeleteRequest(const LocationConfig& loc_config, const std::string& uri) {
+    // 1. Construct the filepath
+    // NOTE: This logic assumes the uri contains the full path relative to root.
+    // Real NGINX logic for 'alias' vs 'root' is complex, but for this project:
+    std::string filepath = loc_config.root + uri;
+
+    // 2. Check if file exists
+    struct stat file_stat;
+    if (stat(filepath.c_str(), &file_stat) != 0) {
+        // File not found
+        return buildErrorResponse(404, NULL);
+    }
+
+    // 3. Check if it is a directory
+    if (S_ISDIR(file_stat.st_mode)) {
+        // We do not allow deleting directories in this simple server
+        return buildErrorResponse(403, NULL); 
+    }
+
+    // 4. Attempt to delete
+    if (std::remove(filepath.c_str()) != 0) {
+        // Deletion failed (permissions, locking, etc.)
+        return buildErrorResponse(500, NULL);
+    }
+
+    // 5. Success (204 No Content is standard for DELETE)
+    return buildResponseHeader(204, "No Content", 0, "");
+}
+
+// --- POST HANDLER (Stub) ---
+std::string HttpResponse::handlePostRequest(const LocationConfig& loc_config, const HttpRequest& req) {
+    (void)loc_config;
+    (void)req;
+    // We will implement Uploads here in the next step
+    return buildResponseHeader(200, "OK", 17, "text/plain") + "POST Not Ready Yet";
 }
