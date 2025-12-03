@@ -15,6 +15,27 @@
 
 ---
 
+## 📐 Architecture Design
+
+This data flow represents how the server handles non-blocking I/O and request processing.
+
+```mermaid
+graph TD
+    start[Start] --> init[Parse Config & Init Sockets]
+    init --> loop{Poll Loop}
+    loop -->|POLLIN| accept[Accept New Client]
+    loop -->|POLLIN| read[Read Request]
+    read --> parse[Parse HTTP]
+    parse -->|GET/POST/DELETE| route[Route & Handle]
+    route -->|Static| file[Read File]
+    route -->|CGI| cgi[Execute CGI Script]
+    file --> build[Build Response]
+    cgi --> build
+    build -->|POLLOUT| send[Send Response]
+    send --> loop
+```
+---
+
 ## 🛠 To-Do List (Immediate Priorities)
 
 ### 1. Fix Routing Features (Easy Wins)
