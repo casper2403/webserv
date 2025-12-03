@@ -1,6 +1,13 @@
 #include "../includes/Webserver.hpp"
 #include "../includes/Config.hpp" // Include your new parser
 
+/**
+ * @brief The main entry point for the web server application
+ * 
+ * @param argc Argument count
+ * @param argv Argument vector
+ * @return int Exit status
+ */
 int main(int argc, char **argv) {
     if (argc != 2) {
         std::cerr << "Usage: ./webserv [config_file]" << std::endl;

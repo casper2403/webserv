@@ -2,6 +2,13 @@
 #include <ctime> // Added for timestamp generation
 
 // --- 2.2 Location Matching (Simplified for now) ---
+/**
+ * @brief Find the best matching location block for a given request path
+ * 
+ * @param server The server configuration
+ * @param path The request URI path
+ * @return const LocationConfig* Pointer to the matching location config, or nullptr if not found
+ */
 const LocationConfig* HttpResponse::findMatchingLocation(const ServerConfig& server, const std::string& path) {
     const LocationConfig* best_match = NULL;
     size_t best_match_length = 0;
@@ -20,6 +27,13 @@ const LocationConfig* HttpResponse::findMatchingLocation(const ServerConfig& ser
 }
 
 // --- 3.1 & 3.2 Path Resolution and File Read ---
+/**
+ * @brief Handle GET requests by serving files
+ * 
+ * @param loc_config The location configuration
+ * @param uri The request URI
+ * @return std::string The full HTTP response
+ */
 std::string HttpResponse::handleGetRequest(const LocationConfig& loc_config, const std::string& uri) {
     std::string filepath;
 
@@ -46,6 +60,12 @@ std::string HttpResponse::handleGetRequest(const LocationConfig& loc_config, con
 }
 
 // Simplified File Content Reader
+/**
+ * @brief Read the entire content of a file into a string
+ * 
+ * @param filepath The path to the file
+ * @return std::string The file content
+ */
 std::string HttpResponse::getFileContent(const std::string& filepath) {
     std::ifstream ifs(filepath.c_str());
     std::stringstream buffer;
@@ -53,6 +73,12 @@ std::string HttpResponse::getFileContent(const std::string& filepath) {
     return buffer.str();
 }
 
+/**
+ * @brief Get the MIME type based on the file extension
+ * 
+ * @param filepath The path to the file
+ * @return std::string The MIME type
+ */
 std::string HttpResponse::getMimeType(const std::string& filepath) {
     if (filepath.rfind(".html") != std::string::npos) return "text/html";
     if (filepath.rfind(".css") != std::string::npos) return "text/css";
@@ -61,6 +87,15 @@ std::string HttpResponse::getMimeType(const std::string& filepath) {
     return "text/plain";
 }
 
+/**
+ * @brief Build the HTTP response header
+ * 
+ * @param status_code The HTTP status code
+ * @param status_text The HTTP status text
+ * @param content_length The length of the response body
+ * @param content_type The MIME type of the response body
+ * @return std::string The complete HTTP response header
+ */
 std::string HttpResponse::buildResponseHeader(int status_code, const std::string& status_text, size_t content_length, const std::string& content_type) {
     std::stringstream ss;
     ss << "HTTP/1.1 " << status_code << " " << status_text << "\r\n";
@@ -72,6 +107,13 @@ std::string HttpResponse::buildResponseHeader(int status_code, const std::string
 }
 
 // --- 4.1 Simple Error Response Generator ---
+/**
+ * @brief Build a simple error response page
+ * 
+ * @param status_code The HTTP status code
+ * @param server_config The server configuration (for custom error pages, if any)
+ * @return std::string The full HTTP error response
+ */
 std::string HttpResponse::buildErrorResponse(int status_code, const ServerConfig* server_config) {
     (void)server_config;
     
@@ -96,6 +138,14 @@ std::string HttpResponse::buildErrorResponse(int status_code, const ServerConfig
     return header + body;
 }
 
+/**
+ * @brief Find the best matching server block for a given request
+ * 
+ * @param req The HTTP request
+ * @param configs The list of server configurations
+ * @param client_port The port of the client
+ * @return const ServerConfig* Pointer to the matching server config, or nullptr if not found
+ */
 const ServerConfig* HttpResponse::findMatchingServer(const HttpRequest& req, const std::vector<ServerConfig>& configs, int client_port) {
     (void)req;
     
@@ -110,6 +160,14 @@ const ServerConfig* HttpResponse::findMatchingServer(const HttpRequest& req, con
     return NULL;
 }
 
+/**
+ * @brief Generate the HTTP response for a given request
+ * 
+ * @param req The HTTP request
+ * @param configs The list of server configurations
+ * @param client_port The port of the client
+ * @return std::string The full HTTP response
+ */
 std::string HttpResponse::generateResponse(const HttpRequest& req, const std::vector<ServerConfig>& configs, int client_port) {
     const ServerConfig* server_config = findMatchingServer(req, configs, client_port);
     if (!server_config) return buildErrorResponse(500, NULL);
@@ -143,6 +201,13 @@ std::string HttpResponse::generateResponse(const HttpRequest& req, const std::ve
 }
 
 // --- DELETE HANDLER ---
+/**
+ * @brief Handle DELETE requests by removing files
+ * 
+ * @param loc_config The location configuration
+ * @param uri The request URI
+ * @return std::string The full HTTP response
+ */
 std::string HttpResponse::handleDeleteRequest(const LocationConfig& loc_config, const std::string& uri) {
     std::string filepath = loc_config.root + uri;
 
@@ -163,6 +228,13 @@ std::string HttpResponse::handleDeleteRequest(const LocationConfig& loc_config, 
 }
 
 // --- POST HANDLER (File Upload) ---
+/**
+ * @brief Handle POST requests by saving uploaded files
+ * 
+ * @param loc_config The location configuration
+ * @param req The HTTP request
+ * @return std::string The full HTTP response
+ */
 std::string HttpResponse::handlePostRequest(const LocationConfig& loc_config, const HttpRequest& req) {
     // 1. Determine the final file path
     std::string full_path = loc_config.root + req.getPath();

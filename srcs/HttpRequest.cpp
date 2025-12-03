@@ -1,10 +1,18 @@
 #include "../includes/HttpRequest.hpp"
 
+/**
+ * @brief Construct a new HttpRequest object
+ * 
+ */
 HttpRequest::HttpRequest() 
     : _state(STATE_REQUEST_LINE), _content_length(0), _chunk_length(0), _is_chunk_size(true) {}
 
 HttpRequest::~HttpRequest() {}
 
+/**
+ * @brief Reset the HttpRequest object to initial state for keep-alive connections
+ * 
+ */
 void HttpRequest::reset() {
     _state = STATE_REQUEST_LINE;
     _method.clear();
@@ -23,12 +31,24 @@ std::string HttpRequest::getPath() const { return _path; }
 std::string HttpRequest::getBody() const { return _body; }
 bool HttpRequest::isFinished() const { return _state == STATE_COMPLETE; }
 
+/**
+ * @brief Get the value of a specific header
+ * 
+ * @param key Header name
+ * @return std::string Header value or empty string if not found
+ */
 std::string HttpRequest::getHeader(const std::string& key) const {
     std::map<std::string, std::string>::const_iterator it = _headers.find(key);
     if (it != _headers.end()) return it->second;
     return "";
 }
 
+/**
+ * @brief Parse incoming raw data
+ * 
+ * @param raw_data Incoming data chunk
+ * @return true if parsing is complete
+ */
 bool HttpRequest::parse(const std::string& raw_data) {
     _buffer += raw_data;
 
@@ -48,6 +68,10 @@ bool HttpRequest::parse(const std::string& raw_data) {
     return _state == STATE_COMPLETE;
 }
 
+/**
+ * @brief Parse the request line (e.g., "GET /path HTTP/1.1")
+ * 
+ */
 void HttpRequest::parseRequestLine() {
     size_t pos = _buffer.find("\r\n");
     if (pos == std::string::npos) return;
@@ -66,6 +90,10 @@ void HttpRequest::parseRequestLine() {
     _state = STATE_HEADERS;
 }
 
+/**
+ * @brief Parse HTTP headers from the buffer
+ * 
+ */
 void HttpRequest::parseHeaders() {
     size_t pos;
     while ((pos = _buffer.find("\r\n")) != std::string::npos) {
@@ -103,6 +131,10 @@ void HttpRequest::parseHeaders() {
     }
 }
 
+/**
+ * @brief Parse the body based on Content-Length
+ * 
+ */
 void HttpRequest::parseBody() {
     if (_buffer.size() >= _content_length) {
         _body = _buffer.substr(0, _content_length);
@@ -111,6 +143,10 @@ void HttpRequest::parseBody() {
     }
 }
 
+/**
+ * @brief Parse chunked transfer encoded body
+ * 
+ */
 void HttpRequest::parseChunkedBody() {
     while (true) {
         if (_is_chunk_size) {

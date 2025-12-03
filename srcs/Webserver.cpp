@@ -5,19 +5,19 @@
 Webserver::Webserver() {}
 Webserver::~Webserver() {}
 
-// Change signature to accept vector of configs
-// srcs/Webserver.cpp
-
+/**
+ * @brief Initialize the webserver by setting up listening sockets for each unique port in the configs.
+ * @param configs Vector of ServerConfig objects containing server settings.s
+ */
 void Webserver::init(const std::vector<ServerConfig> &configs)
 {
 	std::vector<int> listening_ports;
-	_configs_ptr = &configs; // Store the address of the config vector
+	_configs_ptr = &configs;
 
 	for (size_t i = 0; i < configs.size(); ++i)
 	{
 		int port = configs[i].port;
 
-		// Check if we are already listening on this port
 		bool port_exists = false;
 		for (size_t j = 0; j < listening_ports.size(); ++j)
 		{
@@ -28,19 +28,21 @@ void Webserver::init(const std::vector<ServerConfig> &configs)
 			}
 		}
 
-
 		// If not, open the socket and add it to our list
 		if (!port_exists)
-		{			
+		{
 			initSocket(port);
 			listening_ports.push_back(port);
 			std::cout << "Server initialized on port " << port << std::endl;
 		}
 	}
-
 }
 
 // Setup the listening socket
+/**
+ * @brief Initialize the listening socket for a specific port.
+ * @param port The port number to listen on.
+ */
 void Webserver::initSocket(int port)
 {
 	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -94,6 +96,9 @@ void Webserver::initSocket(int port)
 	_server_fd_to_port[server_fd] = port;
 }
 
+/**
+ * @brief Run the webserver event loop.
+ */
 void Webserver::run()
 {
 	std::cout << "Waiting for connections..." << std::endl;
@@ -144,51 +149,62 @@ void Webserver::run()
 	}
 }
 
+/**
+ * @brief Handle reading data from a client socket.
+ * @param client_fd The file descriptor of the client socket.
+ */
 void Webserver::handleClientRead(int client_fd)
 {
-    char buffer[4096]; // Increased buffer size
-    int bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+	char buffer[4096]; // Increased buffer size
+	int bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
 
-    if (bytes_read <= 0) {
-        close(client_fd);
-        _clients.erase(client_fd);
-        // Remove from _fds loop... (implement the removal logic properly as before)
-    } else {
-        buffer[bytes_read] = '\0';
-        
-        // Feed the parser
-        bool finished = _clients[client_fd].request.parse(std::string(buffer, bytes_read));
+	if (bytes_read <= 0)
+	{
+		close(client_fd);
+		_clients.erase(client_fd);
+		// Remove from _fds loop... (implement the removal logic properly as before)
+	}
+	else
+	{
+		buffer[bytes_read] = '\0';
 
-        if (finished) {
-            std::cout << "Request Parsed!" << std::endl;
-            // std::cout << "Method: " << _clients[client_fd].request.getMethod() << std::endl;
-            // std::cout << "Path: " << _clients[client_fd].request.getPath() << std::endl;
+		// Feed the parser
+		bool finished = _clients[client_fd].request.parse(std::string(buffer, bytes_read));
 
-            // // Prepare response (Temporary)
-            // std::string body = "<html><body><h1>Parsed Successfully!</h1></body></html>";
-            // std::stringstream ss;
-            // ss << "HTTP/1.1 200 OK\r\n"
-            //    << "Content-Type: text/html\r\n"
-            //    << "Content-Length: " << body.size() << "\r\n"
-            //    << "\r\n"
-            //    << body;
+		if (finished)
+		{
+			std::cout << "Request Parsed!" << std::endl;
+			// std::cout << "Method: " << _clients[client_fd].request.getMethod() << std::endl;
+			// std::cout << "Path: " << _clients[client_fd].request.getPath() << std::endl;
+
+			// // Prepare response (Temporary)
+			// std::string body = "<html><body><h1>Parsed Successfully!</h1></body></html>";
+			// std::stringstream ss;
+			// ss << "HTTP/1.1 200 OK\r\n"
+			//    << "Content-Type: text/html\r\n"
+			//    << "Content-Length: " << body.size() << "\r\n"
+			//    << "\r\n"
+			//    << body;
 			std::string response = HttpResponse::generateResponse(
-                _clients[client_fd].request, 
-                *_configs_ptr, 
-                _clients[client_fd].listening_port
-            );
-            
-            //_clients[client_fd].response_buffer = ss.str();
+				_clients[client_fd].request,
+				*_configs_ptr,
+				_clients[client_fd].listening_port);
+
+			//_clients[client_fd].response_buffer = ss.str();
 			_clients[client_fd].response_buffer = response;
-            _clients[client_fd].is_ready_to_write = true;
-            
-            // Reset parser for next request on same connection (Keep-Alive)
-            _clients[client_fd].request.reset(); 
-        }
-    }
+			_clients[client_fd].is_ready_to_write = true;
+
+			// Reset parser for next request on same connection (Keep-Alive)
+			_clients[client_fd].request.reset();
+		}
+	}
 }
 
 // ONLY WRITES. Never calls recv().
+/**
+ * @brief Handle writing data to a client socket.
+ * @param client_fd The file descriptor of the client socket.
+ */
 void Webserver::handleClientWrite(int client_fd)
 {
 	// Check if we actually have something to send
@@ -222,6 +238,10 @@ void Webserver::handleClientWrite(int client_fd)
 	}
 }
 
+/**
+ * @brief Accept a new client connection.
+ * @param server_fd The file descriptor of the server socket.
+ */
 void Webserver::acceptConnection(int server_fd)
 {
 	struct sockaddr_in client_addr;
@@ -253,12 +273,16 @@ void Webserver::acceptConnection(int server_fd)
 	Client new_client;
 	new_client.fd = client_fd;
 	new_client.listening_port = _server_fd_to_port[server_fd]; // You must map the server_fd to its port and store it in the client struct
-	 new_client.is_ready_to_write = false;
+	new_client.is_ready_to_write = false;
 	_clients[client_fd] = new_client;
 
 	std::cout << "New connection: " << client_fd << std::endl;
 }
 
+/**
+ * @brief Handle reading data from a client socket.
+ * @param client_fd The file descriptor of the client socket.
+ */
 void Webserver::handleClientData(int client_fd)
 {
 	char buffer[1024];
