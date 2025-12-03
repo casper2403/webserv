@@ -5,6 +5,10 @@
 Webserver::Webserver() {}
 Webserver::~Webserver() {}
 
+/**
+ * @brief Initialize the webserver by setting up listening sockets for each unique port in the configs.
+ * @param configs Vector of ServerConfig objects containing server settings.s
+ */
 void Webserver::init(const std::vector<ServerConfig> &configs)
 {
 	std::vector<int> listening_ports;
@@ -35,6 +39,10 @@ void Webserver::init(const std::vector<ServerConfig> &configs)
 }
 
 // Setup the listening socket
+/**
+ * @brief Initialize the listening socket for a specific port.
+ * @param port The port number to listen on.
+ */
 void Webserver::initSocket(int port)
 {
 	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -88,6 +96,9 @@ void Webserver::initSocket(int port)
 	_server_fd_to_port[server_fd] = port;
 }
 
+/**
+ * @brief Run the webserver event loop.
+ */
 void Webserver::run()
 {
 	std::cout << "Waiting for connections..." << std::endl;
@@ -138,6 +149,10 @@ void Webserver::run()
 	}
 }
 
+/**
+ * @brief Handle reading data from a client socket.
+ * @param client_fd The file descriptor of the client socket.
+ */
 void Webserver::handleClientRead(int client_fd)
 {
 	char buffer[4096]; // Increased buffer size
@@ -186,6 +201,10 @@ void Webserver::handleClientRead(int client_fd)
 }
 
 // ONLY WRITES. Never calls recv().
+/**
+ * @brief Handle writing data to a client socket.
+ * @param client_fd The file descriptor of the client socket.
+ */
 void Webserver::handleClientWrite(int client_fd)
 {
 	// Check if we actually have something to send
@@ -219,6 +238,10 @@ void Webserver::handleClientWrite(int client_fd)
 	}
 }
 
+/**
+ * @brief Accept a new client connection.
+ * @param server_fd The file descriptor of the server socket.
+ */
 void Webserver::acceptConnection(int server_fd)
 {
 	struct sockaddr_in client_addr;
@@ -256,6 +279,10 @@ void Webserver::acceptConnection(int server_fd)
 	std::cout << "New connection: " << client_fd << std::endl;
 }
 
+/**
+ * @brief Handle reading data from a client socket.
+ * @param client_fd The file descriptor of the client socket.
+ */
 void Webserver::handleClientData(int client_fd)
 {
 	char buffer[1024];
