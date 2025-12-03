@@ -1,0 +1,1 @@
+printf "POST /uploads/test_fixed.txt HTTP/1.1\r\nHost: localhost:9090\r\nTransfer-Encoding: chunked\r\nContent-Type: text/plain\r\n\r\n5\r\nHello\r\n6\r\n World\r\n0\r\n\r\n" | nc localhost 9090
