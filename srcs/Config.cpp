@@ -3,6 +3,12 @@
 #include <algorithm> // for std::find
 
 // Helper to remove semicolons from end of strings
+/**
+ * @brief Trim semicolons from the end of a string
+ * 
+ * @param str The input string
+ * @return std::string The trimmed string
+ */
 static std::string trim(const std::string& str) {
     std::string s = str;
     if (!s.empty() && s[s.length() - 1] == ';') {
@@ -11,6 +17,12 @@ static std::string trim(const std::string& str) {
     return s;
 }
 
+/**
+ * @brief Parse the configuration file and return server configurations
+ * 
+ * @param filename Path to the configuration file
+ * @return std::vector<ServerConfig> Vector of parsed server configurations
+ */
 std::vector<ServerConfig> ConfigParser::parse(const std::string& filename) {
     std::ifstream file(filename.c_str());
     if (!file.is_open()) {
@@ -41,6 +53,12 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string& filename) {
     return servers;
 }
 
+/**
+ * @brief Parse a server block from the configuration
+ * 
+ * @param ss String stream containing the config data
+ * @param config ServerConfig object to populate
+ */
 void ConfigParser::parseServerBlock(std::stringstream& ss, ServerConfig& config) {
     std::string token;
     while (ss >> token) {
@@ -93,6 +111,12 @@ void ConfigParser::parseServerBlock(std::stringstream& ss, ServerConfig& config)
     throw std::runtime_error("Error: Unexpected end of file inside server block");
 }
 
+/**
+ * @brief Parse a location block from the configuration
+ * 
+ * @param ss String stream containing the config data
+ * @param loc LocationConfig object to populate
+ */
 void ConfigParser::parseLocationBlock(std::stringstream& ss, LocationConfig& loc) {
     std::string token;
     while (ss >> token) {
@@ -128,6 +152,12 @@ void ConfigParser::parseLocationBlock(std::stringstream& ss, LocationConfig& loc
     }
 }
 
+/**
+ * @brief Check if the given method is valid
+ * 
+ * @param method HTTP method string
+ * @return true if valid, false otherwise
+ */
 bool ConfigParser::isValidMethod(const std::string& method) {
     return (method == "GET" || method == "POST" || method == "DELETE");
 }
