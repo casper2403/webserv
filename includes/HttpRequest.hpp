@@ -50,10 +50,14 @@ private:
     void parseRequestLine();
     void parseHeaders();
     void parseBody();
-    void parseChunkedBody(); // We will implement this in the next iteration
+    void parseChunkedBody(); 
     
     // Internal tracking for body size
     size_t _content_length;
+    
+    // Chunked transfer tracking
+    size_t _chunk_length;
+    bool _is_chunk_size; // true = waiting for hex size, false = waiting for data
 };
 
 #endif

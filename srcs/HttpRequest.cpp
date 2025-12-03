@@ -1,6 +1,8 @@
 #include "../includes/HttpRequest.hpp"
 
-HttpRequest::HttpRequest() : _state(STATE_REQUEST_LINE), _content_length(0) {}
+HttpRequest::HttpRequest() 
+    : _state(STATE_REQUEST_LINE), _content_length(0), _chunk_length(0), _is_chunk_size(true) {}
+
 HttpRequest::~HttpRequest() {}
 
 void HttpRequest::reset() {
@@ -12,6 +14,8 @@ void HttpRequest::reset() {
     _body.clear();
     _buffer.clear();
     _content_length = 0;
+    _chunk_length = 0;
+    _is_chunk_size = true;
 }
 
 std::string HttpRequest::getMethod() const { return _method; }
@@ -37,25 +41,26 @@ bool HttpRequest::parse(const std::string& raw_data) {
     if (_state == STATE_BODY) {
         parseBody();
     }
-    // We will add STATE_CHUNKED later
+    if (_state == STATE_CHUNKED) {
+        parseChunkedBody();
+    }
     
     return _state == STATE_COMPLETE;
 }
 
 void HttpRequest::parseRequestLine() {
     size_t pos = _buffer.find("\r\n");
-    if (pos == std::string::npos) return; // Not enough data yet
+    if (pos == std::string::npos) return;
 
     std::string line = _buffer.substr(0, pos);
-    _buffer.erase(0, pos + 2); // Remove line + CRLF
+    _buffer.erase(0, pos + 2);
 
     std::stringstream ss(line);
     ss >> _method >> _path >> _version;
 
     if (_method.empty() || _path.empty() || _version.empty()) {
-        // Handle error: Bad Request (for now just print)
         std::cerr << "Error: Malformed request line" << std::endl;
-        _state = STATE_COMPLETE; // Force stop
+        _state = STATE_COMPLETE;
         return;
     }
     _state = STATE_HEADERS;
@@ -64,11 +69,10 @@ void HttpRequest::parseRequestLine() {
 void HttpRequest::parseHeaders() {
     size_t pos;
     while ((pos = _buffer.find("\r\n")) != std::string::npos) {
-        // Empty line means end of headers
         if (pos == 0) {
-            _buffer.erase(0, 2);
+            _buffer.erase(0, 2); // End of headers
             
-            // DECIDE NEXT STATE: Body or Complete?
+            // Determine next state
             if (_headers.count("Content-Length")) {
                 _content_length = std::atoi(_headers["Content-Length"].c_str());
                 if (_content_length > 0) {
@@ -78,13 +82,10 @@ void HttpRequest::parseHeaders() {
                 }
             } 
             else if (_headers.count("Transfer-Encoding") && _headers["Transfer-Encoding"] == "chunked") {
-                _state = STATE_CHUNKED; // To be implemented
-                // For now, mark complete to avoid hanging
-                 std::cerr << "Chunked not implemented yet" << std::endl;
-                _state = STATE_COMPLETE; 
+                _state = STATE_CHUNKED;
             } 
             else {
-                _state = STATE_COMPLETE; // No body
+                _state = STATE_COMPLETE;
             }
             return;
         }
@@ -96,10 +97,7 @@ void HttpRequest::parseHeaders() {
         if (colon != std::string::npos) {
             std::string key = line.substr(0, colon);
             std::string value = line.substr(colon + 1);
-            
-            // Trim whitespace
             while (!value.empty() && value[0] == ' ') value.erase(0, 1);
-            
             _headers[key] = value;
         }
     }
@@ -110,5 +108,44 @@ void HttpRequest::parseBody() {
         _body = _buffer.substr(0, _content_length);
         _buffer.erase(0, _content_length);
         _state = STATE_COMPLETE;
+    }
+}
+
+void HttpRequest::parseChunkedBody() {
+    while (true) {
+        if (_is_chunk_size) {
+            // 1. Expecting <Hex Size>\r\n
+            size_t pos = _buffer.find("\r\n");
+            if (pos == std::string::npos) return; // Wait for more data
+
+            std::string line = _buffer.substr(0, pos);
+            _buffer.erase(0, pos + 2);
+
+            // Parse Hex
+            std::stringstream ss;
+            ss << std::hex << line;
+            ss >> _chunk_length;
+
+            if (_chunk_length == 0) {
+                // End of chunks. 
+                // Technically there might be trailers, but we'll assume end of request.
+                // Depending on implementation, we might need to consume one last \r\n
+                _state = STATE_COMPLETE;
+                return;
+            }
+            _is_chunk_size = false; // Next step: Read data
+        } 
+        else {
+            // 2. Expecting <Data>\r\n
+            // We need to wait until we have the full chunk + CRLF
+            if (_buffer.size() < _chunk_length + 2) return; 
+
+            // Extract data
+            _body += _buffer.substr(0, _chunk_length);
+            _buffer.erase(0, _chunk_length + 2); // Remove data + CRLF
+
+            // Reset to read next chunk size
+            _is_chunk_size = true;
+        }
     }
 }
