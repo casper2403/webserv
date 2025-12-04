@@ -23,9 +23,11 @@ private:
 
     // Utilities
     static std::string buildResponseHeader(int status_code, const std::string& status_text, size_t content_length, const std::string& content_type);
+    static std::string buildRedirectResponse(int status_code, const std::string& location);
     static std::string buildErrorResponse(int status_code, const ServerConfig* server_config);
     static std::string getFileContent(const std::string& filepath);
     static std::string getMimeType(const std::string& filepath);
+    static std::string generateDirectoryListing(const std::string& directory_path, const std::string& request_uri);
 };
 
 #endif

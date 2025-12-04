@@ -1,5 +1,6 @@
 #include "../includes/HttpResponse.hpp"
 #include <ctime> // Added for timestamp generation
+#include <dirent.h> // Added for directory listing
 
 // --- 2.2 Location Matching (Simplified for now) ---
 /**
@@ -34,36 +35,71 @@ const LocationConfig* HttpResponse::findMatchingLocation(const ServerConfig& ser
  * @brief Handles GET requests by serving files from the filesystem.
  *
  * Resolves the requested URI to a file path using the location configuration.
- * Returns a 404 error if the file does not exist, or 403 if the path is a directory.
- * Otherwise, reads the file and returns its content with the appropriate headers.
+ * Handles directory requests by checking for index files or generating autoindex listings.
+ * Returns appropriate error responses for missing files or forbidden access.
  *
  * @param loc_config The location configuration for the request.
  * @param uri The request URI.
  * @return The full HTTP response as a string.
  */
 std::string HttpResponse::handleGetRequest(const LocationConfig& loc_config, const std::string& uri) {
+    // Resolve the file path
     std::string filepath;
-
     if (uri == "/") {
-        filepath = loc_config.root + "/" + loc_config.index;
+        filepath = loc_config.root;
     } else {
         filepath = loc_config.root + uri;
     }
 
+    // Check if path exists
     struct stat file_stat;
     if (stat(filepath.c_str(), &file_stat) != 0) {
         return buildErrorResponse(404, NULL);
     }
 
+    // If it's a regular file, serve it directly
+    if (S_ISREG(file_stat.st_mode)) {
+        std::string content = getFileContent(filepath);
+        std::string mime_type = getMimeType(filepath);
+        std::string header = buildResponseHeader(200, "OK", content.length(), mime_type);
+        return header + content;
+    }
+
+    // If it's a directory, handle index file and autoindex
     if (S_ISDIR(file_stat.st_mode)) {
+        // Ensure the directory path ends with a slash for consistency
+        std::string dir_path = filepath;
+        if (dir_path[dir_path.length() - 1] != '/') {
+            dir_path += "/";
+        }
+
+        // Try to serve the index file if specified
+        if (!loc_config.index.empty()) {
+            std::string index_path = dir_path + loc_config.index;
+            struct stat index_stat;
+            if (stat(index_path.c_str(), &index_stat) == 0 && S_ISREG(index_stat.st_mode)) {
+                std::string content = getFileContent(index_path);
+                std::string mime_type = getMimeType(index_path);
+                std::string header = buildResponseHeader(200, "OK", content.length(), mime_type);
+                return header + content;
+            }
+        }
+
+        // If no index file found, check autoindex
+        if (loc_config.autoindex) {
+            std::string listing = generateDirectoryListing(dir_path, uri);
+            if (!listing.empty()) {
+                std::string header = buildResponseHeader(200, "OK", listing.length(), "text/html");
+                return header + listing;
+            }
+        }
+
+        // If neither index file nor autoindex, return 403 Forbidden
         return buildErrorResponse(403, NULL);
     }
 
-    std::string content = getFileContent(filepath);
-    std::string mime_type = getMimeType(filepath);
-    
-    std::string header = buildResponseHeader(200, "OK", content.length(), mime_type);
-    return header + content;
+    // For any other file type (e.g., special files), return 403 Forbidden
+    return buildErrorResponse(403, NULL);
 }
 
 // Simplified File Content Reader
@@ -101,6 +137,62 @@ std::string HttpResponse::getMimeType(const std::string& filepath) {
 }
 
 /**
+ * @brief Generates an HTML directory listing for autoindex.
+ *
+ * Creates an HTML page listing all files and directories in the specified path.
+ *
+ * @param directory_path The filesystem path to the directory.
+ * @param request_uri The URI path of the request (for display purposes).
+ * @return HTML string containing the directory listing.
+ */
+std::string HttpResponse::generateDirectoryListing(const std::string& directory_path, const std::string& request_uri) {
+    DIR* dir = opendir(directory_path.c_str());
+    if (!dir) {
+        return "";
+    }
+
+    std::stringstream html;
+    html << "<!DOCTYPE html>\n<html>\n<head>\n";
+    html << "<title>Index of " << request_uri << "</title>\n";
+    html << "<style>body{font-family:Arial,sans-serif;margin:40px;}h1{border-bottom:1px solid #ccc;}a{text-decoration:none;display:block;padding:2px 0;}a:hover{background-color:#f0f0f0;}</style>\n";
+    html << "</head>\n<body>\n";
+    html << "<h1>Index of " << request_uri << "</h1>\n<hr>\n<pre>\n";
+
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+        std::string name = entry->d_name;
+        
+        // Skip hidden files starting with '.'
+        if (name[0] == '.') continue;
+
+        std::string full_path = directory_path;
+        if (full_path[full_path.length() - 1] != '/') {
+            full_path += "/";
+        }
+        full_path += name;
+
+        struct stat file_stat;
+        if (stat(full_path.c_str(), &file_stat) == 0) {
+            std::string link = request_uri;
+            if (link[link.length() - 1] != '/') {
+                link += "/";
+            }
+            link += name;
+
+            if (S_ISDIR(file_stat.st_mode)) {
+                html << "<a href=\"" << link << "/\">" << name << "/</a>\n";
+            } else {
+                html << "<a href=\"" << link << "\">" << name << "</a>\n";
+            }
+        }
+    }
+    closedir(dir);
+
+    html << "</pre>\n<hr>\n</body>\n</html>";
+    return html.str();
+}
+
+/**
  * @brief Builds the HTTP response header.
  *
  * Constructs the HTTP response header string with the given status code, status text,
@@ -120,6 +212,38 @@ std::string HttpResponse::buildResponseHeader(int status_code, const std::string
     ss << "Connection: keep-alive\r\n";
     ss << "\r\n";
     return ss.str();
+}
+
+// --- 4.0 HTTP Redirect Response Generator ---
+/**
+ * @brief Builds an HTTP redirect response.
+ *
+ * Generates a redirect response with the specified status code and location.
+ *
+ * @param status_code The HTTP status code (e.g., 301, 302).
+ * @param location The redirect target URL.
+ * @return The full HTTP redirect response as a string.
+ */
+std::string HttpResponse::buildRedirectResponse(int status_code, const std::string& location) {
+    std::string status_text;
+    if (status_code == 301) {
+        status_text = "Moved Permanently";
+    } else if (status_code == 302) {
+        status_text = "Found";
+    } else {
+        status_text = "Redirect";
+    }
+
+    std::string body = "<html><head><title>Redirect</title></head><body><h1>" + status_text + "</h1><p>The resource has moved to <a href=\"" + location + "\">" + location + "</a>.</p></body></html>";
+    
+    std::stringstream ss;
+    ss << "HTTP/1.1 " << status_code << " " << status_text << "\r\n";
+    ss << "Location: " << location << "\r\n";
+    ss << "Content-Type: text/html\r\n";
+    ss << "Content-Length: " << body.length() << "\r\n";
+    ss << "Connection: keep-alive\r\n";
+    ss << "\r\n";
+    return ss.str() + body;
 }
 
 // --- 4.1 Simple Error Response Generator ---
@@ -185,8 +309,9 @@ const ServerConfig* HttpResponse::findMatchingServer(const HttpRequest& req, con
 /**
  * @brief Generates the HTTP response for a given request.
  *
- * Determines the appropriate server and location configuration, checks if the method is allowed,
- * and dispatches to the correct handler (GET, POST, DELETE). Returns an error response if needed.
+ * Determines the appropriate server and location configuration, checks for redirects first,
+ * then checks if the method is allowed, and dispatches to the correct handler (GET, POST, DELETE). 
+ * Returns an error response if needed.
  *
  * @param req The HTTP request.
  * @param configs The list of server configurations.
@@ -200,6 +325,12 @@ std::string HttpResponse::generateResponse(const HttpRequest& req, const std::ve
     const LocationConfig* loc_config = findMatchingLocation(*server_config, req.getPath());
     if (!loc_config) return buildErrorResponse(404, server_config); 
 
+    // Check for HTTP redirection first (highest priority)
+    if (loc_config->return_code != 0) {
+        return buildRedirectResponse(loc_config->return_code, loc_config->return_path);
+    }
+
+    // Check if method is allowed
     bool method_allowed = false;
     if (loc_config->methods.empty()) {
         if (req.getMethod() == "GET") method_allowed = true;
