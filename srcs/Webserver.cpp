@@ -1,32 +1,11 @@
 #include "../includes/Webserver.hpp"
-#include "../includes/Config.hpp" // Include your new parser
+#include "../includes/Config.hpp"
 #include "../includes/HttpResponse.hpp"
+#include <algorithm> // For std::find
 
-/**
- * @class Webserver
- * @brief Implements a simple non-blocking HTTP web server using poll().
- *
- * Handles multiple client connections, parses HTTP requests, and generates responses.
- */
-
-/**
- * @brief Default constructor for the Webserver class.
- */
 Webserver::Webserver() {}
-
-/**
- * @brief Destructor for the Webserver class.
- */
 Webserver::~Webserver() {}
 
-/**
- * @brief Initialize the webserver by setting up listening sockets for each unique port in the configs.
- *
- * Iterates through the provided server configurations, opens a listening socket for each unique port,
- * and stores the configuration pointer for later use.
- *
- * @param configs Vector of ServerConfig objects containing server settings.
- */
 void Webserver::init(const std::vector<ServerConfig> &configs)
 {
 	std::vector<int> listening_ports;
@@ -35,7 +14,6 @@ void Webserver::init(const std::vector<ServerConfig> &configs)
 	for (size_t i = 0; i < configs.size(); ++i)
 	{
 		int port = configs[i].port;
-
 		bool port_exists = false;
 		for (size_t j = 0; j < listening_ports.size(); ++j)
 		{
@@ -46,7 +24,6 @@ void Webserver::init(const std::vector<ServerConfig> &configs)
 			}
 		}
 
-		// If not, open the socket and add it to our list
 		if (!port_exists)
 		{
 			initSocket(port);
@@ -56,13 +33,6 @@ void Webserver::init(const std::vector<ServerConfig> &configs)
 	}
 }
 
-/**
- * @brief Initialize the listening socket for a specific port.
- *
- * Sets up a non-blocking socket, binds it to the specified port, and adds it to the pollfd vector.
- *
- * @param port The port number to listen on.
- */
 void Webserver::initSocket(int port)
 {
 	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -72,7 +42,6 @@ void Webserver::initSocket(int port)
 		exit(EXIT_FAILURE);
 	}
 
-	// Allow socket descriptor to be reusable immediately
 	int opt = 1;
 	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
 	{
@@ -80,7 +49,6 @@ void Webserver::initSocket(int port)
 		exit(EXIT_FAILURE);
 	}
 
-	// Set socket to NON-BLOCKING mode (Critical for 42 Project)
 	if (fcntl(server_fd, F_SETFL, O_NONBLOCK) < 0)
 	{
 		perror("fcntl");
@@ -98,7 +66,6 @@ void Webserver::initSocket(int port)
 		perror("bind failed");
 		exit(EXIT_FAILURE);
 	}
-
 	if (listen(server_fd, 10) < 0)
 	{
 		perror("listen");
@@ -106,21 +73,15 @@ void Webserver::initSocket(int port)
 		exit(EXIT_FAILURE);
 	}
 
-	// Add the listening socket to our pollfd vector
 	struct pollfd pfd;
 	pfd.fd = server_fd;
-	pfd.events = POLLIN; // We are interested in reading (new connections)
+	pfd.events = POLLIN;
 	pfd.revents = 0;
 	_fds.push_back(pfd);
 	_server_fds.push_back(server_fd);
 	_server_fd_to_port[server_fd] = port;
 }
 
-/**
- * @brief Run the webserver event loop.
- *
- * Uses poll() to monitor all sockets for incoming connections and data, and dispatches events to the appropriate handlers.
- */
 void Webserver::run()
 {
 	std::cout << "Waiting for connections..." << std::endl;
@@ -128,24 +89,56 @@ void Webserver::run()
 	while (true)
 	{
 		int ret = poll(&_fds[0], _fds.size(), -1);
-
-		// FIX: Check the return value to resolve the "unused variable" error
 		if (ret < 0)
 		{
 			perror("poll");
 			break;
 		}
-
-		// Iterate over FDs to check for events
-		for (size_t i = 0; i < _fds.size(); ++i)
+		time_t now = time(NULL);
+		for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
 		{
-			// 1. HANDLE READ (Recv)
-			if (_fds[i].revents & POLLIN)
+			if (it->second.is_cgi_active && (now - it->second.cgi_start_time) > 3)
 			{
+				std::cout << "CGI Timeout for Client " << it->first << std::endl;
+
+				// Kill the hanging process
+				kill(it->second.cgi_pid, SIGKILL);
+				waitpid(it->second.cgi_pid, NULL, 0);
+
+				// Clean up pipes from poll
+				int cgi_fd = it->second.cgi_pipe_out;
+				close(cgi_fd);
+				_cgi_fd_to_client_fd.erase(cgi_fd);
+
+				// Remove cgi_fd from _fds vector
+				for (std::vector<struct pollfd>::iterator p_it = _fds.begin(); p_it != _fds.end(); ++p_it)
+				{
+					if (p_it->fd == cgi_fd)
+					{
+						_fds.erase(p_it);
+						break;
+					}
+				}
+
+				// Send 504 Gateway Timeout
+				it->second.is_cgi_active = false;
+				it->second.response_buffer = "HTTP/1.1 504 Gateway Timeout\r\nContent-Length: 0\r\n\r\n";
+				it->second.is_ready_to_write = true;
+			}
+		}
+		// Iterate safely: if we erase an element, we must NOT increment 'i'
+		for (size_t i = 0; i < _fds.size(); /* i incremented manually */)
+		{
+			bool fd_removed = false;
+
+			// READ EVENTS (Include POLLHUP for hang-ups)
+			if (_fds[i].revents & (POLLIN | POLLHUP))
+			{
+				int fd = _fds[i].fd;
 				bool is_server = false;
 				for (size_t j = 0; j < _server_fds.size(); ++j)
 				{
-					if (_fds[i].fd == _server_fds[j])
+					if (fd == _server_fds[j])
 					{
 						is_server = true;
 						break;
@@ -154,39 +147,53 @@ void Webserver::run()
 
 				if (is_server)
 				{
-					acceptConnection(_fds[i].fd);
+					acceptConnection(fd);
+				}
+				else if (_cgi_fd_to_client_fd.count(fd))
+				{
+					// handleCgiRead returns false if it closed the FD
+					if (!handleCgiRead(fd))
+						fd_removed = true;
 				}
 				else
 				{
-					handleClientRead(_fds[i].fd);
+					// handleClientRead returns false if it closed the FD
+					if (!handleClientRead(fd))
+						fd_removed = true;
 				}
 			}
 
-			// 2. HANDLE WRITE (Send)
-			if (_fds[i].revents & POLLOUT)
+			// WRITE EVENTS (Only if FD wasn't just removed)
+			if (!fd_removed && (_fds[i].revents & POLLOUT))
 			{
-				handleClientWrite(_fds[i].fd);
+				int fd = _fds[i].fd;
+				if (_clients.count(fd))
+				{
+					handleClientWrite(fd);
+				}
+			}
+
+			// Only increment if we didn't remove the current element
+			// (When removed, the next element shifts into current index 'i')
+			if (!fd_removed)
+			{
+				++i;
 			}
 		}
 	}
 }
 
-/**
- * @brief Handle reading data from a client socket.
- *
- * Reads incoming data, feeds it to the HTTP request parser, and prepares the HTTP response when the request is complete.
- *
- * @param client_fd The file descriptor of the client socket.
- */
-void Webserver::handleClientRead(int client_fd)
+bool Webserver::handleClientRead(int client_fd)
 {
-	char buffer[4096]; // Increased buffer size
+	char buffer[4096];
 	int bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
 
 	if (bytes_read <= 0)
 	{
 		close(client_fd);
 		_clients.erase(client_fd);
+
+		// Remove from _fds vector
 		for (std::vector<struct pollfd>::iterator it = _fds.begin(); it != _fds.end(); ++it)
 		{
 			if (it->fd == client_fd)
@@ -195,103 +202,122 @@ void Webserver::handleClientRead(int client_fd)
 				break;
 			}
 		}
+		return false; // FD was removed
 	}
 	else
 	{
 		buffer[bytes_read] = '\0';
-
-		// Feed the parser
 		bool finished = _clients[client_fd].request.parse(std::string(buffer, bytes_read));
 
 		if (finished)
 		{
-			std::cout << "Request Parsed!" << std::endl;
-			// std::cout << "Method: " << _clients[client_fd].request.getMethod() << std::endl;
-			// std::cout << "Path: " << _clients[client_fd].request.getPath() << std::endl;
+			std::cout << "Request Parsed! Processing..." << std::endl;
 
-			// // Prepare response (Temporary)
-			// std::string body = "<html><body><h1>Parsed Successfully!</h1></body></html>";
-			// std::stringstream ss;
-			// ss << "HTTP/1.1 200 OK\r\n"
-			//    << "Content-Type: text/html\r\n"
-			//    << "Content-Length: " << body.size() << "\r\n"
-			//    << "\r\n"
-			//    << body;
-			std::string response = HttpResponse::generateResponse(
-				_clients[client_fd].request,
-				*_configs_ptr,
-				_clients[client_fd].listening_port);
+			// Pass Client Ref to Logic
+			HttpResponse::processRequest(_clients[client_fd], *_configs_ptr);
 
-			//_clients[client_fd].response_buffer = ss.str();
-			_clients[client_fd].response_buffer = response;
-			_clients[client_fd].is_ready_to_write = true;
+			// If logic started a CGI script, add its pipe to poll
+			if (_clients[client_fd].is_cgi_active)
+			{
+				int cgi_fd = _clients[client_fd].cgi_pipe_out;
+				struct pollfd pfd;
+				pfd.fd = cgi_fd;
+				pfd.events = POLLIN; // POLLHUP is implicitly handled by poll
+				pfd.revents = 0;
+				_fds.push_back(pfd);
+				_cgi_fd_to_client_fd[cgi_fd] = client_fd;
+				std::cout << "CGI started. Monitoring pipe " << cgi_fd << std::endl;
+			}
 
-			// Reset parser for next request on same connection (Keep-Alive)
 			_clients[client_fd].request.reset();
 		}
+		return true; // FD kept
 	}
 }
 
-/**
- * @brief Handle writing data to a client socket.
- *
- * Sends the prepared HTTP response to the client. If the response is fully sent, marks the client as not ready to write.
- *
- * @param client_fd The file descriptor of the client socket.
- */
-void Webserver::handleClientWrite(int client_fd)
+bool Webserver::handleCgiRead(int cgi_fd)
 {
-	// Check if we actually have something to send
-	if (_clients[client_fd].is_ready_to_write && !_clients[client_fd].response_buffer.empty())
+	char buffer[4096];
+	int bytes_read = read(cgi_fd, buffer, sizeof(buffer) - 1);
+
+	// Safety check if client disconnected while CGI was running
+	if (_cgi_fd_to_client_fd.find(cgi_fd) == _cgi_fd_to_client_fd.end())
 	{
-
-		std::string &response = _clients[client_fd].response_buffer;
-
-		// Send as much as the OS allows
-		int bytes_sent = send(client_fd, response.c_str(), response.size(), 0);
-
-		if (bytes_sent < 0)
+		close(cgi_fd);
+		for (std::vector<struct pollfd>::iterator it = _fds.begin(); it != _fds.end(); ++it)
 		{
-			// Handle error
-		}
-		else
-		{
-			// Remove sent bytes from buffer
-			if (bytes_sent > 0)
-				response.erase(0, bytes_sent);
-
-			// If buffer is empty, we are done sending
-			if (response.empty())
+			if (it->fd == cgi_fd)
 			{
-				_clients[client_fd].is_ready_to_write = false;
-				std::cout << "Response fully sent to client " << client_fd << ". Closing connection." << std::endl;
-				// If not keep-alive, close connection here
-				// Still needs cleanup
+				_fds.erase(it);
+				break;
 			}
 		}
+		return false;
+	}
+
+	int client_fd = _cgi_fd_to_client_fd[cgi_fd];
+
+	if (bytes_read > 0)
+	{
+		buffer[bytes_read] = '\0';
+		_clients[client_fd].cgi_output_buffer += buffer;
+		return true; // FD kept
+	}
+	else
+	{
+		// CGI Finished (EOF or Error)
+		close(cgi_fd);
+		for (std::vector<struct pollfd>::iterator it = _fds.begin(); it != _fds.end(); ++it)
+		{
+			if (it->fd == cgi_fd)
+			{
+				_fds.erase(it);
+				break;
+			}
+		}
+		_cgi_fd_to_client_fd.erase(cgi_fd);
+
+		waitpid(_clients[client_fd].cgi_pid, NULL, 0); // Reap zombie
+
+		std::string response = HttpResponse::buildCgiResponse(_clients[client_fd].cgi_output_buffer);
+		_clients[client_fd].response_buffer = response;
+		_clients[client_fd].is_ready_to_write = true;
+		_clients[client_fd].is_cgi_active = false;
+		std::cout << "CGI Finished. Response built." << std::endl;
+
+		return false; // FD removed
 	}
 }
 
-/**
- * @brief Accept a new client connection on a server socket.
- *
- * Accepts the connection, sets the client socket to non-blocking mode, and adds it to the pollfd vector and client map.
- *
- * @param server_fd The file descriptor of the server socket.
- */
+void Webserver::handleClientWrite(int client_fd)
+{
+	if (_clients[client_fd].is_ready_to_write && !_clients[client_fd].response_buffer.empty())
+	{
+		std::string &response = _clients[client_fd].response_buffer;
+		int bytes_sent = send(client_fd, response.c_str(), response.size(), 0);
+
+		if (bytes_sent > 0)
+			response.erase(0, bytes_sent);
+
+		if (response.empty())
+		{
+			_clients[client_fd].is_ready_to_write = false;
+			std::cout << "Response fully sent." << std::endl;
+		}
+	}
+}
+
 void Webserver::acceptConnection(int server_fd)
 {
 	struct sockaddr_in client_addr;
 	socklen_t client_len = sizeof(client_addr);
-
 	int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
+
 	if (client_fd < 0)
 	{
 		perror("accept");
 		return;
 	}
-
-	// Set new client to NON-BLOCKING mode
 	if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0)
 	{
 		perror("fcntl client");
@@ -299,67 +325,16 @@ void Webserver::acceptConnection(int server_fd)
 		return;
 	}
 
-	// Add to poll vector
 	struct pollfd pfd;
 	pfd.fd = client_fd;
-	pfd.events = POLLIN | POLLOUT; // Check for Read AND Write readiness
+	pfd.events = POLLIN | POLLOUT;
 	pfd.revents = 0;
 	_fds.push_back(pfd);
 
-	// Add to map
 	Client new_client;
 	new_client.fd = client_fd;
-	new_client.listening_port = _server_fd_to_port[server_fd]; // You must map the server_fd to its port and store it in the client struct
-	new_client.is_ready_to_write = false;
+	new_client.listening_port = _server_fd_to_port[server_fd];
 	_clients[client_fd] = new_client;
 
 	std::cout << "New connection: " << client_fd << std::endl;
-}
-
-/**
- * @brief Handle reading data from a client socket (legacy/basic version).
- *
- * Reads data from the client, prints it, and sends a basic HTTP response. Also handles client disconnection and cleanup.
- *
- * @param client_fd The file descriptor of the client socket.
- */
-void Webserver::handleClientData(int client_fd)
-{
-	char buffer[1024];
-	int bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
-
-	if (bytes_read <= 0)
-	{
-		// Client disconnected or error
-		if (bytes_read == 0)
-			std::cout << "Client " << client_fd << " disconnected" << std::endl;
-		else
-			perror("recv");
-
-		close(client_fd);
-
-		// Remove from _fds vector (Manual loop required to find it)
-		for (std::vector<struct pollfd>::iterator it = _fds.begin(); it != _fds.end(); ++it)
-		{
-			if (it->fd == client_fd)
-			{
-				_fds.erase(it);
-				break;
-			}
-		}
-		_clients.erase(client_fd);
-	}
-	else
-	{
-		buffer[bytes_read] = '\0';
-		std::cout << "Received data from " << client_fd << ":\n"
-				  << buffer << std::endl;
-
-		// --- SUPER BASIC RESPONSE ---
-		// In the real project, you never write immediately.
-		// You add to a buffer and wait for POLLOUT.
-		// This is just to test "Hello World".
-		std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello World!\n";
-		send(client_fd, response.c_str(), response.size(), 0);
-	}
 }

@@ -4,9 +4,6 @@
 
 /**
  * @brief Removes a trailing semicolon from a string, if present.
- *
- * @param str The input string to trim.
- * @return std::string The trimmed string without a trailing semicolon.
  */
 static std::string trim(const std::string& str) {
     std::string s = str;
@@ -17,11 +14,14 @@ static std::string trim(const std::string& str) {
 }
 
 /**
+ * @brief Checks if the given HTTP method is valid (GET, POST, DELETE).
+ */
+bool ConfigParser::isValidMethod(const std::string& method) {
+    return (method == "GET" || method == "POST" || method == "DELETE");
+}
+
+/**
  * @brief Parses the configuration file and returns a vector of server configurations.
- *
- * @param filename Path to the configuration file.
- * @return std::vector<ServerConfig> Vector of parsed server configurations.
- * @throws std::runtime_error If the file cannot be opened or if the config is invalid.
  */
 std::vector<ServerConfig> ConfigParser::parse(const std::string& filename) {
     std::ifstream file(filename.c_str());
@@ -30,7 +30,7 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string& filename) {
     }
 
     std::stringstream buffer;
-    buffer << file.rdbuf(); // Read whole file into stringstream
+    buffer << file.rdbuf();
 
     std::vector<ServerConfig> servers;
     std::string token;
@@ -45,6 +45,16 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string& filename) {
             
             ServerConfig server;
             parseServerBlock(buffer, server);
+
+            // --- START FIX ---
+            // Post-processing: Inherit root from server if location root is empty
+            for (size_t i = 0; i < server.locations.size(); ++i) {
+                if (server.locations[i].root.empty()) {
+                    server.locations[i].root = server.root;
+                }
+            }
+            // --- END FIX ---
+
             servers.push_back(server);
         } else {
             throw std::runtime_error("Error: Unexpected token '" + token + "' in global scope");
@@ -54,16 +64,12 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string& filename) {
 }
 
 /**
- * @brief Parses a server block from the configuration stream and populates a ServerConfig object.
- *
- * @param ss String stream containing the config data.
- * @param config ServerConfig object to populate.
- * @throws std::runtime_error If the server block is incomplete or invalid.
+ * @brief Parses a server block from the configuration stream.
  */
 void ConfigParser::parseServerBlock(std::stringstream& ss, ServerConfig& config) {
     std::string token;
     while (ss >> token) {
-        if (token == "}") return; // End of server block
+        if (token == "}") return;
 
         if (token == "listen") {
             std::string portStr;
@@ -80,13 +86,11 @@ void ConfigParser::parseServerBlock(std::stringstream& ss, ServerConfig& config)
             ss >> config.root;
             config.root = trim(config.root);
         } else if (token == "error_page") {
-            // Syntax: error_page 404 /404.html;
             int code;
             std::string path;
             ss >> code >> path;
             config.error_pages[code] = trim(path);
         } else if (token == "client_max_body_size") {
-            // Syntax: client_max_body_size 10M;
             std::string sizeStr;
             ss >> sizeStr;
             sizeStr = trim(sizeStr);
@@ -113,15 +117,12 @@ void ConfigParser::parseServerBlock(std::stringstream& ss, ServerConfig& config)
 }
 
 /**
- * @brief Parses a location block from the configuration stream and populates a LocationConfig object.
- *
- * @param ss String stream containing the config data.
- * @param loc LocationConfig object to populate.
+ * @brief Parses a location block from the configuration stream.
  */
 void ConfigParser::parseLocationBlock(std::stringstream& ss, LocationConfig& loc) {
     std::string token;
     while (ss >> token) {
-        if (token == "}") return; // End of location block
+        if (token == "}") return; 
 
         if (token == "root") {
             ss >> loc.root;
@@ -134,8 +135,6 @@ void ConfigParser::parseLocationBlock(std::stringstream& ss, LocationConfig& loc
             ss >> val;
             loc.autoindex = (trim(val) == "on");
         } else if (token == "allow_methods") {
-            // Syntax: allow_methods GET POST DELETE;
-            // Loop until we hit a token that contains ';'
             std::string method;
             while (ss >> method) {
                 std::string cleanMethod = trim(method);
@@ -145,20 +144,16 @@ void ConfigParser::parseLocationBlock(std::stringstream& ss, LocationConfig& loc
                 if (method.find(';') != std::string::npos) break;
             }
         } else if (token == "return") {
-            // Syntax: return 301 /newpath;
             ss >> loc.return_code;
             ss >> loc.return_path;
             loc.return_path = trim(loc.return_path);
+        } else if (token == "cgi_ext") { // Correctly placed inside parseLocationBlock
+            std::string ext;
+            while (ss >> ext) {
+                std::string cleanExt = trim(ext);
+                loc.cgi_ext.push_back(cleanExt);
+                if (ext.find(';') != std::string::npos) break;
+            }
         }
     }
-}
-
-/**
- * @brief Checks if the given HTTP method is valid (GET, POST, DELETE).
- *
- * @param method HTTP method string.
- * @return true if valid, false otherwise.
- */
-bool ConfigParser::isValidMethod(const std::string& method) {
-    return (method == "GET" || method == "POST" || method == "DELETE");
 }
