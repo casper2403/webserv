@@ -19,25 +19,34 @@
  * @param argv Argument vector
  * @return int Exit status code (0 on success, 1 on error)
  */
-int main(int argc, char **argv) {
-    if (argc != 2) {
-        std::cerr << "Usage: ./webserv [config_file]" << std::endl;
-        return 1;
-    }
+int main(int argc, char **argv)
+{
+	if (argc != 2)
+	{
+		std::cerr << "Usage: ./webserv [config_file]" << std::endl;
+		return 1;
+	}
 
-    try {
-        // 1. Parse the config file first
-        ConfigParser parser;
-        std::vector<ServerConfig> configs = parser.parse(argv[1]);
-
-        // 2. Pass the configurations to the server
-        Webserver server;
-        server.init(configs); 
-        server.run();
-
-    } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
-        return 1;
-    }
-    return 0;
+	try
+	{
+		// 1. Parse the config file first
+		ConfigParser parser;
+		std::vector<ServerConfig> configs = parser.parse(argv[1]);
+		// In main.cpp, after parser.parse(argv[1])
+		if (configs.empty())
+		{
+			std::cerr << "Error: No valid server blocks found in configuration file." << std::endl;
+			return 1;
+		}
+		// 2. Pass the configurations to the server
+		Webserver server;
+		server.init(configs);
+		server.run();
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << e.what() << std::endl;
+		return 1;
+	}
+	return 0;
 }
