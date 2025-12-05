@@ -1,17 +1,39 @@
 # Webserv – Status & Roadmap
 
-## 📊 Current Status
-**Progress:** Phase 1 & 2 Complete (Core & Parsing). Phase 3 (Logic) in progress.
+1. Updated Project Status & To-Do List
 
-| Feature | Status | Notes |
-| :--- | :---: | :--- |
-| **Config Parser** | ✅ Done | parsing servers, locations, limits |
-| **Event Loop** | ✅ Done | `poll()`, non-blocking I/O, single thread |
-| **HTTP Parser** | ✅ Done | State machine, headers, **Chunked encoding** support |
-| **Static Methods** | ✅ Done | GET (files), POST (uploads), DELETE |
-| **Routing** | ⚠️ Partial | Matches paths, but Autoindex & Redirects logic missing |
-| **Error Handling** | ⚠️ Partial | Hardcoded responses (custom error pages parsing exists but unused) |
-| **CGI** | ❌ Todo | Logic for fork/execve/pipe needs to be added |
+Your README.md is significantly outdated. You have already implemented almost all Mandatory features. Here is the corrected status:
+📊 Current Status (Revised)
+Feature	Status	Notes
+Config Parser	✅ Done	Full parsing including locations & CGI extensions.
+Event Loop	✅ Done	poll() based, single-threaded, non-blocking.
+HTTP Parser	✅ Done	Handles Headers, Body, and Chunked Encoding.
+Static Methods	✅ Done	GET, POST (uploads), DELETE implemented.
+Routing	✅ Done	Autoindex, Redirects (301), & Error Pages are implemented.
+CGI Execution	⚠️ Partial	Basic execution works (fork/exec/pipe), but lacks Timeout protection.
+🛠 Updated To-Do List (Remaining Tasks)
+
+High Priority (Mandatory Compliance)
+
+    Implement CGI Timeout:
+
+        Why: The server currently waits indefinitely for a script to finish. If a script loops forever, that client connection hangs forever.
+
+        Task: In Webserver::run(), check the timestamp of active CGI processes. If (now - start_time) > TIMEOUT, kill() the child PID and return a 504 Gateway Timeout.
+
+    Verify Keep-Alive / State Reset:
+
+        Why: Your responses send Connection: keep-alive, but you must ensure HttpRequest::reset() and Client state are perfectly cleared after a response so the FD can be reused for a second request.
+
+        Task: Test sending 2 requests in a single nc connection.
+
+Medium Priority (Robustness)
+
+    Large File Upload Handling:
+
+        Why: Currently, you buffer the entire un-chunked body in std::string _body.
+
+        Task: Verify this respects client_max_body_size. If a user sends 1GB and your limit is 10MB, you must cut them off early (413 Entity Too Large) before running out of RAM.
 
 ---
 
@@ -34,23 +56,6 @@ graph TD
     build -->|POLLOUT| send[Send Response]
     send --> loop
 ```
----
-
-## 🛠 To-Do List (Immediate Priorities)
-
-### 1. Fix Routing Features (Easy Wins)
-- [ ] **Implement Redirects:** Update `HttpResponse` to check if a location has a `return` code (e.g., 301). If so, send the redirect header immediately.
-- [ ] **Implement Autoindex:** In `handleGetRequest`, if the target is a directory and `autoindex` is on, generate a simple HTML list of files in that folder instead of returning 403.
-- [ ] **Connect Custom Error Pages:** Update `buildErrorResponse` to look up the error code in `ServerConfig.error_pages`. If found, serve that file instead of the hardcoded string.
-
-### 2. The CGI Monster (The Big Task)
-- [ ] Detect if a requested file matches a CGI extension (e.g., `.php`, `.py`).
-- [ ] Set up `fork()` and `execve()`.
-- [ ] **Environment Variables:** Map HTTP headers to CGI vars (`REQUEST_METHOD`, `QUERY_STRING`, `CONTENT_LENGTH`, `PATH_INFO`, etc.).
-- [ ] **Pipes:**
-    - Pipe 1: Server -> CGI (Write request body to CGI's stdin).
-    - Pipe 2: CGI -> Server (Read CGI's stdout).
-- [ ] **Gateway Timeout:** Handle cases where the script hangs (kill child process).
 
 ---
 
