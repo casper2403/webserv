@@ -66,10 +66,13 @@ void Webserver::run()
         int ret = poll(&_fds[0], _fds.size(), -1);
         if (ret < 0) { perror("poll"); break; }
 
-        for (size_t i = 0; i < _fds.size(); ++i)
+        // Iterate safely: if we erase an element, we must NOT increment 'i'
+        for (size_t i = 0; i < _fds.size(); /* i incremented manually */)
         {
-            // READ EVENTS
-            if (_fds[i].revents & POLLIN)
+            bool fd_removed = false;
+
+            // READ EVENTS (Include POLLHUP for hang-ups)
+            if (_fds[i].revents & (POLLIN | POLLHUP))
             {
                 int fd = _fds[i].fd;
                 bool is_server = false;
@@ -81,26 +84,34 @@ void Webserver::run()
                     acceptConnection(fd);
                 }
                 else if (_cgi_fd_to_client_fd.count(fd)) {
-                    handleCgiRead(fd);
+                    // handleCgiRead returns false if it closed the FD
+                    if (!handleCgiRead(fd)) fd_removed = true;
                 }
                 else {
-                    handleClientRead(fd);
+                    // handleClientRead returns false if it closed the FD
+                    if (!handleClientRead(fd)) fd_removed = true;
                 }
             }
 
-            // WRITE EVENTS
-            if (_fds[i].revents & POLLOUT)
+            // WRITE EVENTS (Only if FD wasn't just removed)
+            if (!fd_removed && (_fds[i].revents & POLLOUT))
             {
                 int fd = _fds[i].fd;
                 if (_clients.count(fd)) {
                     handleClientWrite(fd);
                 }
             }
+
+            // Only increment if we didn't remove the current element
+            // (When removed, the next element shifts into current index 'i')
+            if (!fd_removed) {
+                ++i;
+            }
         }
     }
 }
 
-void Webserver::handleClientRead(int client_fd)
+bool Webserver::handleClientRead(int client_fd)
 {
     char buffer[4096];
     int bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
@@ -109,10 +120,13 @@ void Webserver::handleClientRead(int client_fd)
     {
         close(client_fd);
         _clients.erase(client_fd);
+        
+        // Remove from _fds vector
         for (std::vector<struct pollfd>::iterator it = _fds.begin(); it != _fds.end(); ++it)
         {
             if (it->fd == client_fd) { _fds.erase(it); break; }
         }
+        return false; // FD was removed
     }
     else
     {
@@ -132,7 +146,7 @@ void Webserver::handleClientRead(int client_fd)
                 int cgi_fd = _clients[client_fd].cgi_pipe_out;
                 struct pollfd pfd;
                 pfd.fd = cgi_fd;
-                pfd.events = POLLIN;
+                pfd.events = POLLIN; // POLLHUP is implicitly handled by poll
                 pfd.revents = 0;
                 _fds.push_back(pfd);
                 _cgi_fd_to_client_fd[cgi_fd] = client_fd;
@@ -141,23 +155,35 @@ void Webserver::handleClientRead(int client_fd)
             
             _clients[client_fd].request.reset();
         }
+        return true; // FD kept
     }
 }
 
-void Webserver::handleCgiRead(int cgi_fd)
+bool Webserver::handleCgiRead(int cgi_fd)
 {
     char buffer[4096];
     int bytes_read = read(cgi_fd, buffer, sizeof(buffer) - 1);
+    
+    // Safety check if client disconnected while CGI was running
+    if (_cgi_fd_to_client_fd.find(cgi_fd) == _cgi_fd_to_client_fd.end()) {
+        close(cgi_fd);
+        for (std::vector<struct pollfd>::iterator it = _fds.begin(); it != _fds.end(); ++it) {
+            if (it->fd == cgi_fd) { _fds.erase(it); break; }
+        }
+        return false;
+    }
+
     int client_fd = _cgi_fd_to_client_fd[cgi_fd];
 
     if (bytes_read > 0)
     {
         buffer[bytes_read] = '\0';
         _clients[client_fd].cgi_output_buffer += buffer;
+        return true; // FD kept
     }
     else
     {
-        // CGI Finished
+        // CGI Finished (EOF or Error)
         close(cgi_fd);
         for (std::vector<struct pollfd>::iterator it = _fds.begin(); it != _fds.end(); ++it)
         {
@@ -172,6 +198,8 @@ void Webserver::handleCgiRead(int cgi_fd)
         _clients[client_fd].is_ready_to_write = true;
         _clients[client_fd].is_cgi_active = false;
         std::cout << "CGI Finished. Response built." << std::endl;
+        
+        return false; // FD removed
     }
 }
 

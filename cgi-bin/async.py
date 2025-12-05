@@ -3,13 +3,16 @@ import time
 import os
 import sys
 
-# Send headers
-print("Content-Type: text/plain\r\n\r\n", end="")
-sys.stdout.flush() # Force write to pipe immediately
+# Debug log
+with open("cgi_debug.log", "a") as f:
+    f.write(f"Script started PID: {os.getpid()}\n")
 
-print("Start Sleep (PID: {})...".format(os.getpid()))
+print("Content-Type: text/plain\r\n\r\n", end="")
 sys.stdout.flush()
 
-time.sleep(5) # The server must NOT block other clients during this
+print("Start Sleep...")
+sys.stdout.flush()
 
-print("Wake up! Done.")
+time.sleep(5) # <--- If this runs, the browser MUST spin for 5s
+
+print("Wake up!")

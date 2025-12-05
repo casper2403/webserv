@@ -130,16 +130,25 @@ void HttpResponse::handleCgiRequest(Client& client, const LocationConfig& loc_co
         return;
     }
 
-    if (pid == 0) { // Child
-        close(pipe_in[1]); close(pipe_out[0]);
-        dup2(pipe_in[0], STDIN_FILENO);
-        dup2(pipe_out[1], STDOUT_FILENO);
-        close(pipe_in[0]); close(pipe_out[1]);
+    // ... inside the child process block ...
+if (pid == 0) { // Child
+    close(pipe_in[1]); close(pipe_out[0]);
+    dup2(pipe_in[0], STDIN_FILENO);
+    dup2(pipe_out[1], STDOUT_FILENO);
+    close(pipe_in[0]); close(pipe_out[1]);
 
-        char *argv[] = { const_cast<char*>(script_path.c_str()), NULL };
-        execve(script_path.c_str(), argv, envp.data());
-        exit(1);
-    } else { // Parent
+    char *argv[] = { const_cast<char*>(script_path.c_str()), NULL };
+    
+    // CHANGE STARTS HERE
+    execve(script_path.c_str(), argv, envp.data());
+    
+    // If we reach here, execve failed!
+    perror("execve failed");  // <--- Prints the exact error (e.g. Permission denied, No such file)
+    std::cerr << "Failed to execute: " << script_path << std::endl;
+    // CHANGE ENDS HERE
+    
+    exit(1);
+} else { // Parent
         close(pipe_in[0]);
         close(pipe_out[1]);
 

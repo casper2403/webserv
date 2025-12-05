@@ -45,9 +45,11 @@ private:
 
     void initSocket(int port);
     void acceptConnection(int server_fd);
-    void handleClientRead(int client_fd);
+    
+    // Return true if connection is still active, false if closed/erased
+    bool handleClientRead(int client_fd);
     void handleClientWrite(int client_fd);
-    void handleCgiRead(int cgi_fd); // New Async Handler
+    bool handleCgiRead(int cgi_fd);
 
     std::map<int, int> _server_fd_to_port;
     const std::vector<ServerConfig>* _configs_ptr;
