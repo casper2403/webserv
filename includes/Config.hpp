@@ -16,6 +16,7 @@ struct LocationConfig {
     std::vector<std::string> methods; // GET, POST, DELETE
     std::string return_path; // For redirections
     int return_code;         // e.g. 301, 302
+    std::vector<std::string> cgi_ext; // NEW: Stores extensions like ".php"
 
     LocationConfig() : autoindex(false), return_code(0) {}
 };

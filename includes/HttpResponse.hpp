@@ -18,8 +18,12 @@ private:
 
     // Method Handlers
     static std::string handleGetRequest(const LocationConfig& loc_config, const std::string& uri);
-    static std::string handleDeleteRequest(const LocationConfig& loc_config, const std::string& uri); // NEW
-    static std::string handlePostRequest(const LocationConfig& loc_config, const HttpRequest& req); // NEW (Prototype only for now)
+    static std::string handleDeleteRequest(const LocationConfig& loc_config, const std::string& uri);
+    static std::string handlePostRequest(const LocationConfig& loc_config, const HttpRequest& req);
+    
+    // CGI Handlers
+    static std::string handleCgiRequest(const LocationConfig& loc_config, const HttpRequest& req, const std::string& script_path);
+    static bool isCgiRequest(const LocationConfig& loc_config, const std::string& path);
 
     // Utilities
     static std::string buildResponseHeader(int status_code, const std::string& status_text, size_t content_length, const std::string& content_type);
