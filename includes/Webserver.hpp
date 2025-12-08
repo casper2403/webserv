@@ -30,9 +30,10 @@ struct Client
     int cgi_pid;
     int cgi_pipe_out; // Read from this
     std::string cgi_output_buffer;
+	time_t cgi_start_time;
 
     Client() : fd(-1), is_ready_to_write(false), listening_port(0), 
-               is_cgi_active(false), cgi_pid(-1), cgi_pipe_out(-1) {}
+               is_cgi_active(false), cgi_pid(-1), cgi_pipe_out(-1), cgi_start_time(0) {}
 };
 
 class Webserver

@@ -1,0 +1,99 @@
+================================================================================
+                                WEBSERV TEST SUITE
+================================================================================
+User: casper2403
+Project: webserv
+Config Used: tester.conf (Port 8080) & test_redirect.conf (Port 9090)
+================================================================================
+
+[SECTION 1: COMPILATION & BASICS]
+--------------------------------------------------------------------------------
+1. Compilation
+   Command: make re
+   Expected: No errors. Flags -Wall -Wextra -Werror -std=c++98 must appear.
+   
+2. Relinking Check
+   Command: make
+   Expected: "make: Nothing to be done for 'all'."
+
+3. Startup - No Args
+   Command: ./webserv
+   Expected: Error message or usage usage instructions (exit 1).
+
+4. Startup - Bad Config
+   Command: ./webserv non_existent.conf
+   Expected: Error message "Could not open config file" (exit 1).
+
+[SECTION 2: MANDATORY FEATURES]
+(Ensure server is running: ./webserv tester.conf)
+--------------------------------------------------------------------------------
+5. Static File (GET)
+   Command: curl -v http://localhost:8080/index.html
+   Expected: 200 OK. Content of index.html displayed.
+
+6. Autoindex (GET)
+   Command: curl -v http://localhost:8080/
+   Expected: 200 OK. HTML directory listing of /www folder.
+
+7. 404 Not Found
+   Command: curl -v http://localhost:8080/does_not_exist.html
+   Expected: 404 Not Found. Content of 404.html (if exists).
+
+8. DELETE Method
+   Setup:   touch www/delete_me.txt
+   Command: curl -v -X DELETE http://localhost:8080/delete_me.txt
+   Expected: 204 No Content or 200 OK. File www/delete_me.txt must be gone.
+
+9. Method Not Allowed (405)
+   Command: curl -v -X PUT http://localhost:8080/index.html
+   Expected: 405 Method Not Allowed (since PUT is not in allow_methods).
+
+10. Redirection (301)
+    Setup:   Stop server. Run: ./webserv test_redirect.conf
+    Command: curl -v http://localhost:9090/redirect-me
+    Expected: 301 Moved Permanently. Header "Location: /uploads/" present.
+    Cleanup: Stop server. Restart: ./webserv tester.conf
+
+[SECTION 3: ROBUSTNESS & LIMITS]
+--------------------------------------------------------------------------------
+11. Max Body Size (Client Limit)
+    Note: tester.conf sets limit to 100 bytes.
+    Command: curl -v -X POST --data-binary @Makefile http://localhost:8080/
+    Expected: 413 Payload Too Large (or similar error).
+    
+    (Verify: curl -v -X POST -d "small" http://localhost:8080/ should work/404/500 but NOT 413)
+
+12. CGI Execution (Standard)
+    Command: curl -v http://localhost:8080/cgi-bin/test.py
+    Expected: 200 OK. Dynamic HTML content with environment variables.
+
+13. CGI Timeout (Infinite Loop Protection)
+    Command: curl -v http://localhost:8080/cgi-bin/async.py
+    Expected: Server waits ~3 seconds (or configured timeout), then returns 504 Gateway Timeout.
+              Server MUST NOT crash.
+
+14. Chunked Transfer Encoding
+    Command: printf "POST /uploads/test_fixed.txt HTTP/1.1\r\nHost: localhost:8080\r\nTransfer-Encoding: chunked\r\nContent-Type: text/plain\r\n\r\n5\r\nHello\r\n6\r\n World\r\n0\r\n\r\n" | nc localhost 8080
+    Expected: 200 OK / 201 Created. Check www/uploads/test_fixed.txt contains "Hello World".
+
+[SECTION 4: STABILITY & STRESS]
+--------------------------------------------------------------------------------
+15. Keep-Alive / State Reset
+    Command: (printf "GET /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n"; sleep 1; printf "GET /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n") | nc localhost 8080
+    Expected: Two distinct HTTP 200 responses.
+
+16. Upload Permissions (Crash Check)
+    Setup:   chmod 555 www/uploads
+    Command: curl -v -X POST -d "fail" http://localhost:8080/uploads/fail.txt
+    Expected: 500 Internal Server Error or 403 Forbidden. NO CRASH.
+    Cleanup: chmod 755 www/uploads
+
+17. Siege (Stress Test)
+    Command: siege -b -t 10S http://localhost:8080/index.html
+    Expected: Availability: 100.00%. No segfaults.
+
+18. Memory Leaks
+    Command (Linux): valgrind --leak-check=full ./webserv tester.conf
+    Command (Mac):   leaks --atExit -- ./webserv tester.conf
+    Action: Run tests 5-14 while this runs. Kill server (Ctrl+C).
+    Expected: "definitely lost: 0 bytes" (some "still reachable" is usually fine).

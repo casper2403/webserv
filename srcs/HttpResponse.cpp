@@ -16,6 +16,8 @@ void HttpResponse::processRequest(Client& client, const std::vector<ServerConfig
     const ServerConfig* server_config = findMatchingServer(req, configs, client.listening_port);
 
     // 1. Check Payload Size
+	std::cout << "Debug: Body Size=" << req.getBody().size() 
+          << " Max=" << (server_config ? server_config->client_max_body_size : 0) << std::endl;
     if (server_config && req.getBody().size() > server_config->client_max_body_size) {
         client.response_buffer = buildErrorResponse(413, server_config);
         client.is_ready_to_write = true;
@@ -163,6 +165,8 @@ if (pid == 0) { // Child
         client.cgi_pid = pid;
         client.cgi_pipe_out = pipe_out[0]; // Read end
         client.cgi_output_buffer.clear();
+
+		client.cgi_start_time = time(NULL);
     }
 }
 

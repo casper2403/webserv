@@ -45,6 +45,16 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string& filename) {
             
             ServerConfig server;
             parseServerBlock(buffer, server);
+
+            // --- START FIX ---
+            // Post-processing: Inherit root from server if location root is empty
+            for (size_t i = 0; i < server.locations.size(); ++i) {
+                if (server.locations[i].root.empty()) {
+                    server.locations[i].root = server.root;
+                }
+            }
+            // --- END FIX ---
+
             servers.push_back(server);
         } else {
             throw std::runtime_error("Error: Unexpected token '" + token + "' in global scope");
